@@ -11,7 +11,7 @@ t=str(input())
 print("Введите координаты текста на изображении(2 положительных целых числа)")
 x=int(input())
 y=int(input())
-draw_text.text(#Записываем примерный текст
+draw_text.text(
     (x,y),
     t,
     fill=('#1C0606')
