@@ -3,6 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtPrintSupport import *
+from PIL import Image, ImageDraw
 
 import os #работа с операционной системой
 import sys#модуль sys(список аргументов командной строки)
@@ -207,3 +208,6 @@ if __name__ == '__main__':
 
     window = MainWindow()
     app.exec_()
+
+
+
