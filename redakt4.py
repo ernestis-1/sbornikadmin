@@ -3,13 +3,19 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtPrintSupport import *
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
+from PyQt5 import QtWidgets, QtGui
+from PyQt5.QtGui import QFont, QIcon
+
 
 import os #работа с операционной системой
 import sys#модуль sys(список аргументов командной строки)
 
 
-class MainWindow(QMainWindow):# класс MainWindow
+
+
+
+class MainWindow(QMainWindow,QWidget):# класс MainWindow
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -21,7 +27,7 @@ class MainWindow(QMainWindow):# класс MainWindow
 
         # настраиваем редактор для использования системного шрифта фиксированной ширины QFontDatabase.FixedFontс размером точек 12
         fixedfont = QFontDatabase.systemFont(QFontDatabase.FixedFont)
-        fixedfont.setPointSize(12)
+        fixedfont.setPointSize(16)
         self.editor.setFont(fixedfont)
 
         # self.path(содержит путь к текущему открытому файлу)
@@ -38,9 +44,31 @@ class MainWindow(QMainWindow):# класс MainWindow
         self.setStatusBar(self.status)
 
         file_toolbar = QToolBar("File")#файл
-        file_toolbar.setIconSize(QSize(14, 14))
+        file_toolbar.setIconSize(QSize(18, 18))
         self.addToolBar(file_toolbar)
         file_menu = self.menuBar().addMenu("&File")
+
+        self.button_open = QPushButton('Выбрать картинку')
+        self.button_open.clicked.connect(self._on_open_image)
+
+        self.button_save_as = QPushButton('Сохранить картинку')
+        self.button_save_as.clicked.connect(self._on_save_as_image)
+
+        
+
+        
+
+        self.label_image = QLabel("<Файл>")
+
+       
+
+        layout.addWidget(self.button_open)
+        layout.addWidget(self.button_save_as)
+        layout.addWidget(self.label_image)
+        
+       
+
+        
         
         #.clear()	Очистить выделенный текст
         #.cut() 	Вырезать выделенный текст в буфер обмена
@@ -82,11 +110,11 @@ class MainWindow(QMainWindow):# класс MainWindow
         file_toolbar.addAction(print_action)
 
         edit_toolbar = QToolBar("Edit")#редактировать
-        edit_toolbar.setIconSize(QSize(16, 16))
+        edit_toolbar.setIconSize(QSize(18, 18))
         self.addToolBar(edit_toolbar)
         edit_menu = self.menuBar().addMenu("&Edit")
 
-        undo_action = QAction(QIcon(os.path.join('images', 'arrow-curve-180-left.png')), "Undo", self)
+        undo_action = QAction(QIcon(os.path.join('images', 'x.png')), "Undo", self)
         undo_action.setStatusTip("Undo last change")#отменить последнее изменение
         undo_action.triggered.connect(self.editor.undo)
         edit_menu.addAction(undo_action)
@@ -124,21 +152,31 @@ class MainWindow(QMainWindow):# класс MainWindow
 
         edit_menu.addSeparator()
 
-        wrap_action = QAction(QIcon(os.path.join('images', 'arrow-continue.png')), "Wrap text to window", self)
+        wrap_action = QAction(QIcon(os.path.join('images', 'wind.png')), "Wrap text to window", self)
         wrap_action.setStatusTip("Toggle wrap text to window")#перенос текста в окно
         wrap_action.setCheckable(True)
         wrap_action.setChecked(True)
         wrap_action.triggered.connect(self.edit_toggle_wrap)
         edit_menu.addAction(wrap_action)
 
+        
+
+        self.resize(650, 650)
+
         self.update_title()
         self.show()
+
+             
 
     def dialog_critical(self, s):#обработка MessageBox
         dlg = QMessageBox(self)
         dlg.setText(s)
         dlg.setIcon(QMessageBox.Critical)
         dlg.show()
+
+
+   
+        
 #определяем file_open метод, который при запуске использует QFileDialog.getOpenFileName
 #для отображения диалогового окна открытия файла платформы
 #выбранный путь затем используется для открытия файла 
@@ -158,6 +196,8 @@ class MainWindow(QMainWindow):# класс MainWindow
                 self.path = path
                 self.editor.setPlainText(text)
                 self.update_title()
+
+    
 #два блока для сохранения файлов - save и save_as
 #первый для сохранения открытого файла, у которого уже есть имя файла, второй для сохранения нового файла
     def file_save(self):#функция для сохранения файла
@@ -188,6 +228,11 @@ class MainWindow(QMainWindow):# класс MainWindow
         else:
             self.path = path
             self.update_title()
+
+
+  
+
+       
     #настройка печати
     def file_print(self):
         dlg = QPrintDialog()
@@ -199,15 +244,40 @@ class MainWindow(QMainWindow):# класс MainWindow
 
     def edit_toggle_wrap(self):
         self.editor.setLineWrapMode( 1 if self.editor.lineWrapMode() == 0 else 0 )
+        
+    def _on_open_image(self):
+        file_name =QFileDialog.getOpenFileName(self, "Выбор картинки", None, "Image (*.png *.jpg *.jpeg)")[0]
+        if not file_name:
+            return
 
+        filepath = file_name.split("/")[-1]
+        
+        #self.label_image.setPixmap(pixmap)
+        
+        self.label_image.setText(filepath)
+        
+        
+       
+        
+
+    def _on_save_as_image(self):
+        file_name = QFileDialog.getSaveFileName(self, "Сохранение картинки", 'img.jpg', "Image (*.png *.jpg)")[0]
+        if not file_name:
+            return
+
+        self.label_image.pixmap().save(file_name)
+    
 #результат
 if __name__ == '__main__':
-#конец пргораммы
+#конец программы
     app = QApplication(sys.argv)
     app.setApplicationName("Текстовый редактор v 0.3")
-
     window = MainWindow()
     app.exec_()
+
+
+
+
 
 
 
