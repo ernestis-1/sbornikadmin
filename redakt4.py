@@ -11,6 +11,7 @@ from PyQt5.QtGui import QFont, QIcon
 import os #работа с операционной системой
 import sys#модуль sys(список аргументов командной строки)
 
+import requests
 
 
 
@@ -60,11 +61,23 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
 
         self.label_image = QLabel("<Файл>")
 
+        self.label_nazv = QPlainTextEdit()
+        fixedfontnazv = QFontDatabase.systemFont(QFontDatabase.TitleFont)
+        fixedfontnazv.setPointSize(18)
+        self.label_nazv.setFont(fixedfontnazv)
+        
+        self.label_nazvprot = QLabel("Введите название для статьи:")
+
        
 
         layout.addWidget(self.button_open)
         layout.addWidget(self.button_save_as)
         layout.addWidget(self.label_image)
+        layout.addWidget(self.label_nazvprot)
+        layout.addWidget(self.label_nazv)
+        
+
+        
         
        
 
@@ -85,7 +98,7 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         # набор кнопок панели инструментов для редактирования, каждая из которых определяется как QAction
         # Подключение .triggeredсигнала от QActionк соответствующему слоту включает определенное поведение
         
-        open_file_action = QAction(QIcon(os.path.join('images', 'blue-folder-open-document.png')), "Open file...", self)
+        open_file_action = QAction(QIcon(os.path.join('images', 'blueopen.png')), "Open file...", self)
         open_file_action.setStatusTip("Open file")#открыть файл
         open_file_action.triggered.connect(self.file_open)
         file_menu.addAction(open_file_action)
@@ -97,7 +110,7 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         file_menu.addAction(save_file_action)
         file_toolbar.addAction(save_file_action)
 
-        saveas_file_action = QAction(QIcon(os.path.join('images', 'disk--pencil.png')), "Save As...", self)
+        saveas_file_action = QAction(QIcon(os.path.join('images', 'disk2.png')), "Save As...", self)
         saveas_file_action.setStatusTip("Save current page to specified file")#сохранить текущую страницу в указанный файл
         saveas_file_action.triggered.connect(self.file_saveas)
         file_menu.addAction(saveas_file_action)
@@ -119,7 +132,7 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         undo_action.triggered.connect(self.editor.undo)
         edit_menu.addAction(undo_action)
 
-        redo_action = QAction(QIcon(os.path.join('images', 'arrow-curve.png')), "Redo", self)
+        redo_action = QAction(QIcon(os.path.join('images', 'redo.png')), "Redo", self)
         redo_action.setStatusTip("Redo last change")#повторить последнее изменение
         redo_action.triggered.connect(self.editor.redo)
         edit_toolbar.addAction(redo_action)
@@ -133,19 +146,19 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         edit_toolbar.addAction(cut_action)
         edit_menu.addAction(cut_action)
 
-        copy_action = QAction(QIcon(os.path.join('images', 'document-copy.png')), "Copy", self)
+        copy_action = QAction(QIcon(os.path.join('images', 'copy.png')), "Copy", self)
         copy_action.setStatusTip("Copy selected text")#копировать выбранный текст
         copy_action.triggered.connect(self.editor.copy)
         edit_toolbar.addAction(copy_action)
         edit_menu.addAction(copy_action)
 
-        paste_action = QAction(QIcon(os.path.join('images', 'clipboard-paste-document-text.png')), "Paste", self)
+        paste_action = QAction(QIcon(os.path.join('images', 'paste.png')), "Paste", self)
         paste_action.setStatusTip("Paste from clipboard")#вставить
         paste_action.triggered.connect(self.editor.paste)
         edit_toolbar.addAction(paste_action)
         edit_menu.addAction(paste_action)
 
-        select_action = QAction(QIcon(os.path.join('images', 'selection-input.png')), "Select all", self)
+        select_action = QAction(QIcon(os.path.join('images', 'all.png')), "Select all", self)
         select_action.setStatusTip("Select all text")
         select_action.triggered.connect(self.editor.selectAll)
         edit_menu.addAction(select_action)
@@ -208,7 +221,7 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         self._save_to_path(self.path)#сохранение
 
     def file_saveas(self):#функция для сохранения файла как
-        path, _ = QFileDialog.getSaveFileName(self, "Save file", "", "Text documents (*.txt);All files (*.*)")
+        path, _ = QFileDialog.getSaveFileName(self, "Save file", "", "Text documents (*.txt All files (*.*)")
 
         if not path:
             # Если было отменено, то вернется - ''
@@ -266,6 +279,29 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
             return
 
         self.label_image.pixmap().save(file_name)
+
+path_img='sea.jpg'
+url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+with open(path_img, 'rb') as img:
+  name_img= os.path.basename(path_img)
+  files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+  with requests.Session() as s:
+    r = s.post(url,files=files)
+    print(r.status_code)
+    print(r.text)
+    json_response = r.json()
+    url_data = json_response['data']
+    perem=url_data["url"]
+    print(f'Нужный url: {url_data["url"]}')
+    
+    
+    
+    
+
+
+
+
+        
     
 #результат
 if __name__ == '__main__':
@@ -274,6 +310,8 @@ if __name__ == '__main__':
     app.setApplicationName("Текстовый редактор v 0.3")
     window = MainWindow()
     app.exec_()
+    
+
 
 
 
