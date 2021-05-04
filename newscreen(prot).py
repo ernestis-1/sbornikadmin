@@ -59,7 +59,11 @@ class MainWindow(QWidget):
         self.label_image.setPixmap(pixmap)
 
     def _on_save_as_image(self):
-        self.label_image.pixmap().save(self.save_file_name)
+        file_name = QFileDialog.getSaveFileName(self, "Сохранение картинки", 'img.jpg', "Image (*.png *.jpg)")[0]
+        if not file_name:
+            return
+        
+        self.label_image.pixmap().save(file_name)
 
 
 
