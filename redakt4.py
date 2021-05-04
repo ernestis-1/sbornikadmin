@@ -16,13 +16,13 @@ import requests
 
 
 
-class MainWindow(QMainWindow,QWidget):# класс MainWindow
+class MainWindow(QMainWindow, QWidget):# класс MainWindow
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
        #виджет отображает область редактирования
         layout = QVBoxLayout()
-        self.editor = QPlainTextEdit()  # QPlainTextEdit 
+        self.editor = QPlainTextEdit()  #QPlainTextEdit 
         #добавляем виджет в наше окно, просто создаем его как обычно, а затем устанавливаем в центральную позицию виджета для окна
 
 
@@ -268,10 +268,7 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         #self.label_image.setPixmap(pixmap)
         
         self.label_image.setText(filepath)
-        
-        
-       
-        
+
 
     def _on_save_as_image(self):
         file_name = QFileDialog.getSaveFileName(self, "Сохранение картинки", 'img.jpg', "Image (*.png *.jpg)")[0]
@@ -280,29 +277,22 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
 
         self.label_image.pixmap().save(file_name)
 
-path_img='sea.jpg'
-url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
-with open(path_img, 'rb') as img:
-  name_img= os.path.basename(path_img)
-  files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
-  with requests.Session() as s:
-    r = s.post(url,files=files)
-    print(r.status_code)
-    print(r.text)
-    json_response = r.json()
-    url_data = json_response['data']
-    perem=url_data["url"]
-    print(f'Нужный url: {url_data["url"]}')
-    
-    
-    
-    
+
+def get_photo_uri(path_img):
+    url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+    with open(path_img, 'rb') as img:
+        name_img = os.path.basename(path_img)
+        files = {'image': (name_img,img, 'multipart/form-data', {'Expires': '0'}) }
+        with requests.Session() as s:
+            r = s.post(url,files=files)
+            #print(r.status_code)
+            #print(r.text)
+            json_response = r.json()
+            url_data = json_response['data']
+            print(f'Нужный url: {url_data["url"]}')
+            return url_data["url"]
 
 
-
-
-        
-    
 #результат
 if __name__ == '__main__':
 #конец программы
