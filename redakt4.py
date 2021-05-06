@@ -400,9 +400,6 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
                 self.editor.setPlainText(text)
                 self.update_title()
 
-   
-
-
         
 
     
@@ -437,9 +434,6 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
             self.path = path
             self.update_title()
 
-
-  
-
        
     #настройка печати
     def file_print(self):
@@ -459,13 +453,7 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
             return
 
         filepath = file_name.split("/")[-1]
-
-        
-        
-        
         #file_name1 = file_name.resize((10, 10))
-        
-        
         
         pixmap = QPixmap(file_name)
         
