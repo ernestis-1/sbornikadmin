@@ -18,6 +18,7 @@ import requests
 import uuid
 
 
+
 FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64]
 IMAGE_EXTENSIONS = ['.jpg','.png','.bmp','.jpeg']
 HTML_EXTENSIONS = ['.htm', '.html']
@@ -112,7 +113,7 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         file_menu = self.menuBar().addMenu("&File")
 
         self.razdel = QPushButton('Переход в создание раздела')
-        #self.razdel.clicked.connect(self.perexod)
+        self.razdel.clicked.connect(self.buttonClicked)
 
         self.button_open = QPushButton('Выбрать картинку')
         self.button_open.clicked.connect(self._on_open_image)
@@ -126,7 +127,7 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         self.label_image = QLabel("<Файл>")
         
 
-        self.label_nazv = QPlainTextEdit()
+        self.label_nazv = QLineEdit()
         fixedfontnazv = QFontDatabase.systemFont(QFontDatabase.TitleFont)
         fixedfontnazv.setPointSize(18)
         self.label_nazv.setFont(fixedfontnazv)
@@ -377,6 +378,9 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         dlg.setIcon(QMessageBox.Critical)
         dlg.show()
 
+        
+   
+
 
    
         
@@ -446,6 +450,11 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
 
     def edit_toggle_wrap(self):
         self.editor.setLineWrapMode( 1 if self.editor.lineWrapMode() == 0 else 0 )
+
+    def buttonClicked(self):
+        #from проект.newscreen import MainWindow
+        import os
+        os.system ('newscreen.py')
         
     def _on_open_image(self):
         file_name = QFileDialog.getOpenFileName(self, "Выбор картинки", None, "Image (*.png *.jpg)")[0]
