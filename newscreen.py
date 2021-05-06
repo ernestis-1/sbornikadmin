@@ -15,7 +15,7 @@ class MainWindow(QWidget):
         super().__init__()
         main_layout = QVBoxLayout()
 
-        self.label_nazv = QPlainTextEdit()
+        self.label_nazv = QLineEdit()#QPlainTextEdit
         fixedfontnazv = QFontDatabase.systemFont(QFontDatabase.TitleFont)
         fixedfontnazv.setPointSize(18)
         self.label_nazv.setFont(fixedfontnazv)
