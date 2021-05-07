@@ -23,6 +23,75 @@ FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64]
 IMAGE_EXTENSIONS = ['.jpg','.png','.bmp','.jpeg']
 HTML_EXTENSIONS = ['.htm', '.html']
 
+
+class NewWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        main_layout = QVBoxLayout()
+
+        self.label_nazv = QLineEdit()#QPlainTextEdit
+        fixedfontnazv = QFontDatabase.systemFont(QFontDatabase.TitleFont)
+        fixedfontnazv.setPointSize(18)
+        self.label_nazv.setFont(fixedfontnazv)
+
+       
+
+        self.button_open = QPushButton('Выбрать картинку')
+        self.button_open.clicked.connect(self._on_open_image)
+
+        self.button_save_as = QPushButton('Сохранить картинку')
+        self.button_save_as.clicked.connect(self._on_save_as_image)
+
+        
+
+       
+
+        self.label_image = QLabel()
+
+        self.label_nazvprot = QLabel("Введите название для статьи:")
+
+        # Путь сохранения файла
+        self.save_file_name = 'C:\img.jpg'
+
+        
+        main_layout.addWidget(self.button_open)
+        main_layout.addWidget(self.button_save_as)
+        main_layout.addWidget(self.label_image)
+        main_layout.addWidget(self.label_nazvprot)
+        main_layout.addWidget(self.label_nazv)
+       
+        
+
+        self.setLayout(main_layout)
+
+    def _on_open_image(self):
+        file_name = QFileDialog.getOpenFileName(self, "Выбор картинки", None, "Image (*.png *.jpg)")[0]
+        if not file_name:
+            return
+
+        pixmap = QPixmap(file_name)
+        self.label_image.setPixmap(pixmap)
+
+    def _on_save_as_image(self):
+        file_name = QFileDialog.getSaveFileName(self, "Сохранение картинки", 'img.jpg', "Image (*.png *.jpg)")[0]
+        if not file_name:
+            return
+        
+        self.label_image.pixmap().save(file_name)
+
+
+
+    def file_saveas(self):#функция для сохранения файла как
+        path, _ = QFileDialog.getSaveFileName(self, "Save file", "", "Text documents (*.txt All files (*.*)")
+
+        if not path:
+            # Если было отменено, то вернется - ''
+            return
+
+        self._save_to_path(path)
+
+
+
 def hexuuid():
     return uuid.uuid4().hex
 
@@ -81,6 +150,18 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         super(MainWindow, self).__init__(*args, **kwargs)
        #виджет отображает область редактирования
         layout = QVBoxLayout()
+
+        self.label_nazvprot = QLabel("Введите название для статьи:")
+
+        layout.addWidget(self.label_nazvprot)
+        
+        self.label_nazv = QLineEdit()
+        fixedfontnazv = QFontDatabase.systemFont(QFontDatabase.TitleFont)
+        fixedfontnazv.setPointSize(18)
+        self.label_nazv.setFont(fixedfontnazv)
+
+        layout.addWidget(self.label_nazv)
+        
         self.editor = TextEdit()  # QPlainTextEdit 
         #добавляем виджет в наше окно, просто создаем его как обычно, а затем устанавливаем в центральную позицию виджета для окна
         self.editor.setAutoFormatting(QTextEdit.AutoAll)
@@ -107,6 +188,7 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         self.status = QStatusBar()
         self.setStatusBar(self.status)
 
+
         file_toolbar = QToolBar("File")#файл
         file_toolbar.setIconSize(QSize(18, 18))
         self.addToolBar(file_toolbar)
@@ -127,20 +209,13 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         self.label_image = QLabel("<Файл>")
         
 
-        self.label_nazv = QLineEdit()
-        fixedfontnazv = QFontDatabase.systemFont(QFontDatabase.TitleFont)
-        fixedfontnazv.setPointSize(18)
-        self.label_nazv.setFont(fixedfontnazv)
-        
-        self.label_nazvprot = QLabel("Введите название для статьи:")
 
        
         layout.addWidget(self.razdel)
         layout.addWidget(self.button_open)
         layout.addWidget(self.button_save_as)
         layout.addWidget(self.label_image)
-        layout.addWidget(self.label_nazvprot)
-        layout.addWidget(self.label_nazv)
+        
         
 
         
@@ -452,9 +527,14 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         self.editor.setLineWrapMode( 1 if self.editor.lineWrapMode() == 0 else 0 )
 
     def buttonClicked(self):
-        #from проект.newscreen import MainWindow
-        import os
-        os.system ('newscreen.py')
+        #from newscreen
+        #from newscreen import NewWindow
+        
+        self.exPopup = NewWindow()
+        self.exPopup.setWindowTitle("Создание раздела")
+        self.exPopup.setGeometry(100, 200, 100, 100)
+        self.exPopup.show()
+        
         
     def _on_open_image(self):
         file_name = QFileDialog.getOpenFileName(self, "Выбор картинки", None, "Image (*.png *.jpg)")[0]
@@ -507,9 +587,6 @@ if __name__ == '__main__':
     window = MainWindow()
     app.exec_()
     
-
-
-
 
 
 
