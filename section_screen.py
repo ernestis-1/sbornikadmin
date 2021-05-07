@@ -11,14 +11,17 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
+from sections_api import SectionInfo, SectionsApi
+from global_constants import SECTIONS_API
 
 
 class Section(QPushButton):
-    def __init__(self, img_path="../../Users/caisilus/Pictures/Saved Pictures/S8HLlscvIvk.jpg", section_name="section name"):
+    def __init__(self, sect_id=-1, img_path="../../Users/caisilus/Pictures/Saved Pictures/S8HLlscvIvk.jpg", section_name="section name"):
         QPushButton.__init__(self, parent=None)
-        #self.w = QWidget()
-        #self.w.setGeometry(QtCore.QRect(30, 30, 471, 231))
-        #self.frame.setObjectName("frame")
+        self.sect_id = sect_id
+        self.__init_ui__(img_path, section_name)
+
+    def __init_ui__(self, img_path, section_name):
         layout = QHBoxLayout()
         self.setLayout(layout)
         self.setMaximumHeight(200)
@@ -48,23 +51,33 @@ class Section(QPushButton):
         label_2.setObjectName("label_2")
         layout.addWidget(label_2)
 
+    def get_id(self):
+        return self.sect_id
 
 class SectionsWindow(QMainWindow, QWidget):
     def __init__(self):
         super(SectionsWindow, self).__init__()
         self.resize(800, 600)
+        self.api = SectionsApi(SECTIONS_API)
+        self.init_sections()
+        self.init_ui()
+        
+    def init_sections(self):
+        self.sections = self.api.get_sections()
 
+    def init_ui(self):
         widget = QWidget()
         layout = QVBoxLayout()
-        self.section1 = Section(section_name="section1")
-        self.section2 = Section(section_name="section2")
-        self.section3 = Section(section_name="section3")
-        layout.addWidget(self.section1)
-        #self.layout.addStretch(1)
-        layout.addWidget(self.section2)
-        #self.layout.addStretch(1)
-        layout.addWidget(self.section3)     
-        #self.layout.addStretch()
+
+        for section_info in self.sections:
+            if (section_info.img_url):
+                section = Section(section_name=section_info.name, sect_id=section_info.sect_id, img_path=section_info.img_url)
+                layout.addWidget(section)
+            else:
+                section = Section(section_name=section_info.name, sect_id=section_info.sect_id)
+                layout.addWidget(section)
+        #self.section1 = Section(section_name="section1")
+        #layout.addWidget(self.section1)
         widget.setLayout(layout)
         #scroller_layout = QVBoxLayout()
         #scroller_layout.addLayout(layout)
@@ -74,18 +87,28 @@ class SectionsWindow(QMainWindow, QWidget):
         self.scroller = QScrollArea()
         #self.setCentralWidget(self.scroller)
         self.scroller.setFixedWidth(700)
+        self.scroller.setMinimumHeight(150)
         self.scroller.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.scroller.setWidgetResizable(True)
         
         self.scroller.setWidget(widget)
         #self.scroller.adjustSize()
 
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.head_label = QLabel()
+        self.head_label.setFont(font)
+        self.head_label.setText("Разделы сборника")
+
         main_layout = QVBoxLayout()
+        main_layout.addWidget(self.head_label)
         main_layout.addWidget(self.scroller)
+        
         #main_layout.addStretch()
         self.main_widget = QWidget()
         self.main_widget.setLayout(main_layout)
         self.setCentralWidget(self.main_widget)
+
         
 
 
