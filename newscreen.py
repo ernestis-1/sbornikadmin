@@ -10,7 +10,7 @@ from PyQt5.QtGui import QFont, QIcon
 import os #работа с операционной системой
 import sys#модуль sys(список аргументов командной строки)
 
-class MainWindow(QWidget):
+class NewWindow(QWidget):
     def __init__(self):
         super().__init__()
         main_layout = QVBoxLayout()
@@ -82,7 +82,7 @@ class MainWindow(QWidget):
 if __name__ == '__main__':
     app = QApplication([])
 
-    mw = MainWindow()
+    mw = NewWindow()
     mw.show()
 
     app.exec()
