@@ -1,6 +1,9 @@
 import requests
 import tempfile
 import os
+import time
+import aiohttp
+import asyncio
 
 class SectionInfo:
     def __init__(self, sect_id, name, img_url):
@@ -29,9 +32,12 @@ class SectionsApi:
     def __init__(self, url):
         self.url = url
     
-    def get_sections(self):
-        r = requests.get(self.url)
-        j = r.json()
+    async def get_sections(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.url) as r:
+                j = await r.json()
+        #r = requests.get(self.url)
+        #j = r.json()
         l = []
         for sect in j:
             print(sect)

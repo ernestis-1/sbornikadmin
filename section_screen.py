@@ -10,9 +10,12 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from sections_api import SectionInfo, SectionsApi
 from global_constants import SECTIONS_API
+from preloader import Preloader
+from quamash import QEventLoop
+import asyncio
 
 
 class Section(QPushButton):
@@ -55,34 +58,45 @@ class Section(QPushButton):
         return self.sect_id
 
 class SectionsWindow(QMainWindow, QWidget):
+    #async_sections_sygnal = pyqtSignal()
+
     def __init__(self):
         super(SectionsWindow, self).__init__()
         self.resize(800, 600)
         self.api = SectionsApi(SECTIONS_API)
-        self.init_sections()
         self.init_ui()
+        #self.async_sections_sygnal.connect(self.wrap)
+        #self.async_sections_sygnal.emit()
+        #self.init_sections()
         
-    def init_sections(self):
-        self.sections = self.api.get_sections()
+    def showEvent(self, event):
+        print("show event")
+        asyncio.ensure_future(self.init_sections())
 
-    def init_ui(self):
-        widget = QWidget()
-        layout = QVBoxLayout()
-
+    async def init_sections(self):
+        print("init sections")
+        self.sections = await self.api.get_sections()
+        self.preloader.stop_loader_animation()
+        self.layout.removeWidget(self.preloader)
+        self.preloader.hide()
         for section_info in self.sections:
             if (section_info.img_url):
                 section = Section(section_name=section_info.name, sect_id=section_info.sect_id, img_path=section_info.img_url)
-                layout.addWidget(section)
+                self.layout.addWidget(section)
             else:
                 section = Section(section_name=section_info.name, sect_id=section_info.sect_id)
-                layout.addWidget(section)
-        #self.section1 = Section(section_name="section1")
-        #layout.addWidget(self.section1)
-        widget.setLayout(layout)
-        #scroller_layout = QVBoxLayout()
-        #scroller_layout.addLayout(layout)
-        #scroller_layout.addStretch()
-        #widget.setLayout(scroller_layout)
+                self.layout.addWidget(section)
+
+
+    def init_ui(self):
+        widget = QWidget()
+        self.layout = QVBoxLayout()
+        widget.setLayout(self.layout)
+
+        
+        self.preloader = Preloader()
+        self.layout.addWidget(self.preloader)
+        
 
         self.scroller = QScrollArea()
         #self.setCentralWidget(self.scroller)
@@ -110,12 +124,21 @@ class SectionsWindow(QMainWindow, QWidget):
         self.setCentralWidget(self.main_widget)
 
         
-
-
-
-if __name__ == "__main__":
+def main():
     import sys
     app = QtWidgets.QApplication(sys.argv)
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
+
     MainWindow = SectionsWindow()
     MainWindow.show()
-    sys.exit(app.exec_())
+    print("show")
+    
+    with loop:
+        print("loop")
+        loop.run_forever()
+
+    #sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()
