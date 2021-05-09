@@ -11,11 +11,13 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QFont
 from sections_api import SectionInfo, SectionsApi
 from global_constants import SECTIONS_API
 from preloader import Preloader
 from quamash import QEventLoop
 import asyncio
+import aiohttp
 
 
 class Section(QPushButton):
@@ -27,7 +29,7 @@ class Section(QPushButton):
     def __init_ui__(self, img_path, section_name):
         layout = QHBoxLayout()
         self.setLayout(layout)
-        self.setMaximumHeight(200)
+        self.setMaximumHeight(150)
         self.setMinimumHeight(140)
 
         label = QtWidgets.QLabel(self)
@@ -44,7 +46,7 @@ class Section(QPushButton):
         label_2 = QtWidgets.QLabel(self)
         #self.label_2.setGeometry(QtCore.QRect(220, 60, 241, 101))
         label_2.setMinimumHeight(120)
-        font = QtGui.QFont()
+        font = QFont()
         font.setPointSize(14)
         label_2.setFont(font)
         label_2.setText(section_name)
@@ -70,23 +72,50 @@ class SectionsWindow(QMainWindow, QWidget):
         #self.init_sections()
         
     def showEvent(self, event):
-        print("show event")
+        #print("show event")
         asyncio.ensure_future(self.init_sections())
+
+    def closeEvent(self, event):
+        #print("close!")
+        import os, shutil
+        folder = 'tempfiles/'
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
+
 
     async def init_sections(self):
         print("init sections")
         self.sections = await self.api.get_sections()
+
+        sections = []
+        async with aiohttp.ClientSession() as session:
+            for section_info in self.sections:
+                image_path = await section_info.get_image_path(session) 
+                if (image_path):
+                    section = Section(section_name=section_info.name, sect_id=section_info.sect_id, img_path=image_path)
+                    sections.append(section)
+                    #self.layout.addWidget(section)
+                else:
+                    section = Section(section_name=section_info.name, sect_id=section_info.sect_id)
+                    sections.append(section)
+                    #self.layout.addWidget(section)
+        
         self.preloader.stop_loader_animation()
         self.layout.removeWidget(self.preloader)
         self.preloader.hide()
-        for section_info in self.sections:
-            if (section_info.img_url):
-                section = Section(section_name=section_info.name, sect_id=section_info.sect_id, img_path=section_info.img_url)
-                self.layout.addWidget(section)
-            else:
-                section = Section(section_name=section_info.name, sect_id=section_info.sect_id)
-                self.layout.addWidget(section)
 
+        for section in sections:
+            self.layout.addWidget(section)
+
+    def add_section_clicked(self):
+        print("clicked!")
 
     def init_ui(self):
         widget = QWidget()
@@ -100,7 +129,7 @@ class SectionsWindow(QMainWindow, QWidget):
 
         self.scroller = QScrollArea()
         #self.setCentralWidget(self.scroller)
-        self.scroller.setFixedWidth(700)
+        self.scroller.setFixedWidth(650)
         self.scroller.setMinimumHeight(150)
         self.scroller.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.scroller.setWidgetResizable(True)
@@ -108,20 +137,41 @@ class SectionsWindow(QMainWindow, QWidget):
         self.scroller.setWidget(widget)
         #self.scroller.adjustSize()
 
+        head_layout = QHBoxLayout()
+        self.head_widget = QWidget()
+        self.head_widget.setFixedWidth(662)
+        self.head_widget.setLayout(head_layout)
+
         font = QtGui.QFont()
         font.setPointSize(14)
+
         self.head_label = QLabel()
         self.head_label.setFont(font)
         self.head_label.setText("Разделы сборника")
+        #self.head_label.setMinimumHeight(50)
+        #self.head_label.setMinimumWidth(100)
+        #self.head_label.setMaximumWidth(300)
+        #self.head_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+
+        self.add_section_button = QPushButton("+")
+        self.add_section_button.setFont(font)
+        self.add_section_button.setMaximumWidth(100)
+        self.add_section_button.clicked.connect(self.add_section_clicked)
+
+        head_layout.addWidget(self.head_label)
+        head_layout.addWidget(self.add_section_button)
+
 
         main_layout = QVBoxLayout()
-        main_layout.addWidget(self.head_label)
+        #main_layout.addWidget(self.head_label)
+        main_layout.addWidget(self.head_widget)
         main_layout.addWidget(self.scroller)
         
         #main_layout.addStretch()
         self.main_widget = QWidget()
         self.main_widget.setLayout(main_layout)
         self.setCentralWidget(self.main_widget)
+
 
         
 def main():

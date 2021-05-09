@@ -538,6 +538,7 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         
     def _on_open_image(self):
         file_name = QFileDialog.getOpenFileName(self, "Выбор картинки", None, "Image (*.png *.jpg)")[0]
+        print(file_name)
         if not file_name:
             return
 
