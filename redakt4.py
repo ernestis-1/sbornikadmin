@@ -7,6 +7,8 @@ from PIL import Image, ImageDraw, ImageFont
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtPrintSupport import *
+from PyQt5.QtWidgets import (QWidget, QGridLayout,
+    QPushButton, QApplication)
 
 
 import os #работа с операционной системой
@@ -28,6 +30,8 @@ class NewWindow(QWidget):
     def __init__(self):
         super().__init__()
         main_layout = QVBoxLayout()
+        
+        
 
         self.label_nazv = QLineEdit()#QPlainTextEdit
         fixedfontnazv = QFontDatabase.systemFont(QFontDatabase.TitleFont)
@@ -150,6 +154,9 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         super(MainWindow, self).__init__(*args, **kwargs)
        #виджет отображает область редактирования
         layout = QVBoxLayout()
+        
+        self.photo_list = []
+        self.photo_nazvlist =[]
 
         self.label_nazvprot = QLabel("Введите название для статьи:")
 
@@ -200,13 +207,38 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         self.button_open = QPushButton('Выбрать картинку')
         self.button_open.clicked.connect(self._on_open_image)
 
-        self.button_save_as = QPushButton('Сохранить картинку')
+        self.button_save_as = QPushButton('Отправить картинки')
         self.button_save_as.clicked.connect(self._on_save_as_image)
 
         
 
 
-        self.label_image = QLabel("<Файл>")
+        self.label_image = QLabel("<Здесь будут отображаться фотографии, которые Вы выбрали>")
+        self.urlcart1 = QLabel()
+        self.urlcart2 = QLabel()
+        self.urlcart3 = QLabel()
+        self.urlcart4 = QLabel()
+        self.urlcart5 = QLabel()
+        self.urlcart6 = QLabel()
+        self.urlcart7 = QLabel()
+        self.urlcart8 = QLabel()
+        self.urlcart9 = QLabel()
+        self.urlcart10 = QLabel()
+        
+
+        #path_img='sea.jpg'
+        #url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+        #with open(path_img, 'rb') as img:
+        #  name_img= os.path.basename(path_img)
+        #  files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+        #  with requests.Session() as s:
+        #    r = s.post(url,files=files)
+        #    print(r.status_code)
+        #    print(r.text)
+        #    json_response = r.json()
+        #    url_data = json_response['data']
+        #    perem=url_data["url"]
+        #    print(f'Нужный url: {perem}')
         
 
 
@@ -215,6 +247,16 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         layout.addWidget(self.button_open)
         layout.addWidget(self.button_save_as)
         layout.addWidget(self.label_image)
+        layout.addWidget(self.urlcart1)
+        layout.addWidget(self.urlcart2)
+        layout.addWidget(self.urlcart3)
+        layout.addWidget(self.urlcart4)
+        layout.addWidget(self.urlcart5)
+        layout.addWidget(self.urlcart6)
+        layout.addWidget(self.urlcart7)
+        layout.addWidget(self.urlcart8)
+        layout.addWidget(self.urlcart9)
+        layout.addWidget(self.urlcart10)
         
         
 
@@ -533,9 +575,6 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         self.editor.setLineWrapMode( 1 if self.editor.lineWrapMode() == 0 else 0 )
 
     def buttonClicked(self):
-        #from newscreen
-        #from newscreen import NewWindow
-        
         self.exPopup = NewWindow()
         self.exPopup.setWindowTitle("Создание раздела")
         self.exPopup.setGeometry(100, 200, 100, 100)
@@ -549,16 +588,32 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
 
         filepath = file_name.split("/")[-1]
 
+        path_img = file_name
+        url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+        #print(path_img)
+        with open(path_img, 'rb') as img:
+          name_img = os.path.basename(path_img)
+          files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+          with requests.Session() as s:
+            r = s.post(url,files=files)
+            #print(r.status_code)
+            #print(r.text)
+            json_response = r.json()
+            url_data = json_response['data']
+            perem=url_data["url"]
+            #print(perem)
+
+        self.photo_list.append(file_name)
+
+        self.photo_nazvlist.append(filepath)
+
+       
+            
+        #self.urlcart1.setText(perem)
         
+        #pixmap = QPixmap(file_name)
         
-        
-        #file_name1 = file_name.resize((10, 10))
-        
-        
-        
-        pixmap = QPixmap(file_name)
-        
-        self.label_image.setText(filepath)
+        self.label_image.setText('; '.join(self.photo_nazvlist))#filepath
         
         #self.label_image.setPixmap(pixmap)
         
@@ -567,36 +622,194 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         
        
         
-
+#функция для отправления все на сервер
     def _on_save_as_image(self):
-        file_name = QFileDialog.getSaveFileName(self, "Сохранение картинки", 'img.jpg', "Image (*.png *.jpg)")[0]
-        if not file_name:
-            return
+        #file_name = QFileDialog.getSaveFileName(self, "Сохранение картинки", 'img.jpg', "Image (*.png *.jpg)")[0]
+        #if not file_name:
+        #    return
 
-        self.label_image.pixmap().save(file_name)
+        if len(self.photo_list) == 0:
+            self.urlcart1.setText("Вы не выбрали фотографию")
 
+        if len(self.photo_list) > 0:
+            path_img = self.photo_list[0]
+            url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+            #print(path_img)
+            with open(path_img, 'rb') as img:
+                name_img = os.path.basename(path_img)
+                files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+                with requests.Session() as s:
+                    r = s.post(url,files=files)
+                    #print(r.status_code)
+                    #print(r.text)
+                    json_response = r.json()
+                    url_data = json_response['data']
+                    perem=url_data["url"]
+                    #print(perem)
+            self.urlcart1.setText(perem)
+
+
+        if len(self.photo_list) > 1:
+            path_img = self.photo_list[1]
+            url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+            #print(path_img)
+            with open(path_img, 'rb') as img:
+                name_img = os.path.basename(path_img)
+                files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+                with requests.Session() as s:
+                    r = s.post(url,files=files)
+                    #print(r.status_code)
+                    #print(r.text)
+                    json_response = r.json()
+                    url_data = json_response['data']
+                    perem=url_data["url"]
+                    #print(perem)
+            self.urlcart2.setText(perem)
+
+
+        if len(self.photo_list) > 2:
+            path_img = self.photo_list[2]
+            url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+            #print(path_img)
+            with open(path_img, 'rb') as img:
+                name_img = os.path.basename(path_img)
+                files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+                with requests.Session() as s:
+                    r = s.post(url,files=files)
+                    #print(r.status_code)
+                    #print(r.text)
+                    json_response = r.json()
+                    url_data = json_response['data']
+                    perem=url_data["url"]
+                    #print(perem)
+            self.urlcart3.setText(perem)
+
+        if len(self.photo_list) > 3:
+            path_img = self.photo_list[3]
+            url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+            #print(path_img)
+            with open(path_img, 'rb') as img:
+                name_img = os.path.basename(path_img)
+                files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+                with requests.Session() as s:
+                    r = s.post(url,files=files)
+                    #print(r.status_code)
+                    #print(r.text)
+                    json_response = r.json()
+                    url_data = json_response['data']
+                    perem=url_data["url"]
+                    #print(perem)
+            self.urlcart4.setText(perem)
+
+
+        if len(self.photo_list) > 4:
+            path_img = self.photo_list[4]
+            url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+            #print(path_img)
+            with open(path_img, 'rb') as img:
+                name_img = os.path.basename(path_img)
+                files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+                with requests.Session() as s:
+                    r = s.post(url,files=files)
+                    #print(r.status_code)
+                    #print(r.text)
+                    json_response = r.json()
+                    url_data = json_response['data']
+                    perem=url_data["url"]
+                    #print(perem)
+            self.urlcart5.setText(perem)
+
+        if len(self.photo_list) > 5:
+            path_img = self.photo_list[5]
+            url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+            #print(path_img)
+            with open(path_img, 'rb') as img:
+                name_img = os.path.basename(path_img)
+                files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+                with requests.Session() as s:
+                    r = s.post(url,files=files)
+                    #print(r.status_code)
+                    #print(r.text)
+                    json_response = r.json()
+                    url_data = json_response['data']
+                    perem=url_data["url"]
+                    #print(perem)
+            self.urlcart6.setText(perem)
+
+        if len(self.photo_list) > 6:
+            path_img = self.photo_list[6]
+            url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+            #print(path_img)
+            with open(path_img, 'rb') as img:
+                name_img = os.path.basename(path_img)
+                files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+                with requests.Session() as s:
+                    r = s.post(url,files=files)
+                    #print(r.status_code)
+                    #print(r.text)
+                    json_response = r.json()
+                    url_data = json_response['data']
+                    perem=url_data["url"]
+                    #print(perem)
+            self.urlcart7.setText(perem)
+
+        if len(self.photo_list) > 7:
+            path_img = self.photo_list[7]
+            url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+            #print(path_img)
+            with open(path_img, 'rb') as img:
+                name_img = os.path.basename(path_img)
+                files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+                with requests.Session() as s:
+                    r = s.post(url,files=files)
+                    #print(r.status_code)
+                    #print(r.text)
+                    json_response = r.json()
+                    url_data = json_response['data']
+                    perem=url_data["url"]
+                    #print(perem)
+            self.urlcart8.setText(perem)
+
+        if len(self.photo_list) > 8:
+            path_img = self.photo_list[8]
+            url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+            #print(path_img)
+            with open(path_img, 'rb') as img:
+                name_img = os.path.basename(path_img)
+                files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+                with requests.Session() as s:
+                    r = s.post(url,files=files)
+                    #print(r.status_code)
+                    #print(r.text)
+                    json_response = r.json()
+                    url_data = json_response['data']
+                    perem=url_data["url"]
+                    #print(perem)
+            self.urlcart9.setText(perem)
+
+        if len(self.photo_list) > 9:
+            path_img = self.photo_list[9]
+            url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
+            #print(path_img)
+            with open(path_img, 'rb') as img:
+                name_img = os.path.basename(path_img)
+                files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
+                with requests.Session() as s:
+                    r = s.post(url,files=files)
+                    #print(r.status_code)
+                    #print(r.text)
+                    json_response = r.json()
+                    url_data = json_response['data']
+                    perem=url_data["url"]
+                    #print(perem)
+            self.urlcart10.setText(perem)
         
 
-path_img='sea.jpg'
-url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
-with open(path_img, 'rb') as img:
-  name_img= os.path.basename(path_img)
-  files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
-  with requests.Session() as s:
-    r = s.post(url,files=files)
-    print(r.status_code)
-    print(r.text)
-    json_response = r.json()
-    url_data = json_response['data']
-    perem=url_data["url"]
-    print(f'Нужный url: {url_data["url"]}')
-    
-    
-    
-    
 
-
-
+        
+        
+            
+            
 
         
     
