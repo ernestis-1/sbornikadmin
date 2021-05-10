@@ -7,6 +7,8 @@ from PIL import Image, ImageDraw, ImageFont
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtPrintSupport import *
+from PyQt5.QtWidgets import (QWidget, QGridLayout,
+    QPushButton, QApplication)
 
 
 import os #работа с операционной системой
@@ -28,6 +30,8 @@ class NewWindow(QWidget):
     def __init__(self):
         super().__init__()
         main_layout = QVBoxLayout()
+        
+        
 
         self.label_nazv = QLineEdit()#QPlainTextEdit
         fixedfontnazv = QFontDatabase.systemFont(QFontDatabase.TitleFont)
@@ -150,6 +154,9 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         super(MainWindow, self).__init__(*args, **kwargs)
        #виджет отображает область редактирования
         layout = QVBoxLayout()
+        
+        self.photo_list = []
+        self.photo_nazvlist =[]
 
         self.label_nazvprot = QLabel("Введите название для статьи:")
 
@@ -159,6 +166,7 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         fixedfontnazv = QFontDatabase.systemFont(QFontDatabase.TitleFont)
         fixedfontnazv.setPointSize(18)
         self.label_nazv.setFont(fixedfontnazv)
+        
 
         layout.addWidget(self.label_nazv)
         
@@ -200,29 +208,42 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         self.button_open = QPushButton('Выбрать картинку')
         self.button_open.clicked.connect(self._on_open_image)
 
-        self.button_save_as = QPushButton('Сохранить картинку')
+        self.button_save_as = QPushButton('Отправить картинки')
         self.button_save_as.clicked.connect(self._on_save_as_image)
 
         
 
 
-        self.label_image = QLabel("<Файл>")
+        self.label_image = QLabel("<Здесь будут отображаться фотографии, которые Вы выбрали>")
+        self.urlcart1 = QLabel()
+        self.urlcart2 = QLabel()
+        self.urlcart3 = QLabel()
+        self.urlcart4 = QLabel()
+        self.urlcart5 = QLabel()
+        self.urlcart6 = QLabel()
+        self.urlcart7 = QLabel()
+        self.urlcart8 = QLabel()
+        self.urlcart9 = QLabel()
+        self.urlcart10 = QLabel()
         
-
 
        
         layout.addWidget(self.razdel)
         layout.addWidget(self.button_open)
         layout.addWidget(self.button_save_as)
         layout.addWidget(self.label_image)
+        layout.addWidget(self.urlcart1)
+        layout.addWidget(self.urlcart2)
+        layout.addWidget(self.urlcart3)
+        layout.addWidget(self.urlcart4)
+        layout.addWidget(self.urlcart5)
+        layout.addWidget(self.urlcart6)
+        layout.addWidget(self.urlcart7)
+        layout.addWidget(self.urlcart8)
+        layout.addWidget(self.urlcart9)
+        layout.addWidget(self.urlcart10)
         
-        
-
-        
-        
-       
-
-        
+      
         
         #.clear()	Очистить выделенный текст
         #.cut() 	Вырезать выделенный текст в буфер обмена
@@ -499,6 +520,8 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
             return
 
         self._save_to_path(path)
+   
+        
 # в любом случае выполняется само сохранение, _save_to_path()которое принимает целевой путь   
     def _save_to_path(self, path):
         text = self.editor.toPlainText()
@@ -527,9 +550,6 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         self.editor.setLineWrapMode( 1 if self.editor.lineWrapMode() == 0 else 0 )
 
     def buttonClicked(self):
-        #from newscreen
-        #from newscreen import NewWindow
-        
         self.exPopup = NewWindow()
         self.exPopup.setWindowTitle("Создание раздела")
         self.exPopup.setGeometry(100, 200, 100, 100)
@@ -556,7 +576,7 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         
        
         
-
+#функция для отправления все на сервер
     def _on_save_as_image(self):
         file_name = QFileDialog.getSaveFileName(self, "Сохранение картинки", 'img.jpg', "Image (*.png *.jpg)")[0]
         if not file_name:
@@ -587,9 +607,23 @@ if __name__ == '__main__':
     app.setApplicationName("Текстовый редактор v 0.3")
     window = MainWindow()
     app.exec_()
+
     
+    
+#url = http://sbornikbackend.somee.com/GuideSections
+#server = 
+#   {
+#       "isMain" : False,
+#       "title" : str(self.label_nazvprot.text())
+#       "text":
+#       "parentId": 9
+#       "pictures":[
 
 
+#                   ]
 
+#   }
+#res = requests.post(url, json=server)
+#print res.text
 
 
