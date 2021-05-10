@@ -166,6 +166,7 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         fixedfontnazv = QFontDatabase.systemFont(QFontDatabase.TitleFont)
         fixedfontnazv.setPointSize(18)
         self.label_nazv.setFont(fixedfontnazv)
+        
 
         layout.addWidget(self.label_nazv)
         
@@ -226,22 +227,6 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         self.urlcart10 = QLabel()
         
 
-        #path_img='sea.jpg'
-        #url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
-        #with open(path_img, 'rb') as img:
-        #  name_img= os.path.basename(path_img)
-        #  files= {'image': (name_img,img,'multipart/form-data',{'Expires': '0'}) }
-        #  with requests.Session() as s:
-        #    r = s.post(url,files=files)
-        #    print(r.status_code)
-        #    print(r.text)
-        #    json_response = r.json()
-        #    url_data = json_response['data']
-        #    perem=url_data["url"]
-        #    print(f'Нужный url: {perem}')
-        
-
-
        
         layout.addWidget(self.razdel)
         layout.addWidget(self.button_open)
@@ -258,13 +243,7 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         layout.addWidget(self.urlcart9)
         layout.addWidget(self.urlcart10)
         
-        
-
-        
-        
-       
-
-        
+      
         
         #.clear()	Очистить выделенный текст
         #.cut() 	Вырезать выделенный текст в буфер обмена
@@ -544,6 +523,8 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
             return
 
         self._save_to_path(path)
+   
+        
 # в любом случае выполняется само сохранение, _save_to_path()которое принимает целевой путь   
     def _save_to_path(self, path):
         text = self.editor.toPlainText()
@@ -820,9 +801,23 @@ if __name__ == '__main__':
     app.setApplicationName("Текстовый редактор v 0.3")
     window = MainWindow()
     app.exec_()
+
     
+    
+#url = http://sbornikbackend.somee.com/GuideSections
+#server = 
+#   {
+#       "isMain" : False,
+#       "title" : str(self.label_nazvprot.text())
+#       "text":
+#       "parentId": 9
+#       "pictures":[
 
 
+#                   ]
 
+#   }
+#res = requests.post(url, json=server)
+#print res.text
 
 
