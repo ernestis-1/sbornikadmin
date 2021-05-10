@@ -13,8 +13,7 @@ from preloader import Preloader
 import section_edit, redakt4
 
 class Section(QPushButton):
-    def __init__(self, sect_id=-1, img_path="../../Users/caisilus/Pictures/Saved Pictures/S8HLlscvIvk.jpg", 
-            section_name="section name", sectionsWindow=None):
+    def __init__(self, sect_id=-1, img_path=None, section_name="section name", sectionsWindow=None):
         QPushButton.__init__(self, parent=None)
         self.sect_id = sect_id
         self.img_path = img_path
@@ -38,7 +37,8 @@ class Section(QPushButton):
         label.setScaledContents(True)
         label.setObjectName("label")
         layout.addWidget(label)
-        #layout.addStretch(1)
+        #layout.addStretch(0)
+        #layout.setAlignment(Qt.AlignLeft)
 
         label_2 = QtWidgets.QLabel(self)
         #self.label_2.setGeometry(QtCore.QRect(220, 60, 241, 101))
@@ -51,6 +51,7 @@ class Section(QPushButton):
         label_2.setTextFormat(QtCore.Qt.AutoText)
         label_2.setScaledContents(False)
         label_2.setObjectName("label_2")
+        label_2.setMargin(10)
         layout.addWidget(label_2)
 
     def get_id(self):
@@ -58,7 +59,7 @@ class Section(QPushButton):
 
     def edit_clicked(self):
         self.sectionsWindow.forbidDeletion(self.img_path)
-        print("edit clicked")
+        #print("edit clicked")
         self.sectionsWindow.switch_to_edit_section(self.sect_id, self.section_name, self.img_path)
 
 

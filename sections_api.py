@@ -34,6 +34,12 @@ class SectionInfo:
             return None
 
 
+class ArticleInfo:
+    def __init__(self, article_id, article_title):
+        self.article_id = article_id
+        self.article_title = article_title
+
+
 class SectionsApi:
     def __init__(self, url):
         self.url = url
@@ -53,3 +59,20 @@ class SectionsApi:
             #print(_id)
             l.append(SectionInfo(_id, _name, _img_url))
         return l
+
+    async def get_articles(self, sect_id):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.url+f"/{sect_id}") as r:
+                j = await r.json()
+        l = []
+        try:
+            data = j['data']
+        except Exception as e:
+            return None
+        if j['type'] == "article":
+            l.append(ArticleInfo(data['id'], data['title']))
+            return l
+        for article_data in data:
+            l.append(ArticleInfo(article_data['id'], article_data['title']))
+        return l
+        
