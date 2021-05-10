@@ -73,8 +73,10 @@ class NewWindow(QWidget):
         if not file_name:
             return
 
-        pixmap = QPixmap(file_name)
-        self.label_image.setPixmap(pixmap)
+        background = QPixmap(file_name).scaled(200,200)
+
+        #pixmap = QPixmap(file_name)
+        self.label_image.setPixmap(background)
 
     def _on_save_as_image(self):
         file_name = QFileDialog.getSaveFileName(self, "Сохранение картинки", 'img.jpg', "Image (*.png *.jpg)")[0]
@@ -516,6 +518,7 @@ class MainWindow(QMainWindow,QWidget):# класс MainWindow
         self._save_to_path(self.path)#сохранение
 
     def file_saveas(self):#функция для сохранения файла как
+        #print(self.editor.toPlainText())
         path, _ = QFileDialog.getSaveFileName(self, "Save file", "", "Text documents (*.txt All files (*.*)")
 
         if not path:
