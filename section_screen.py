@@ -13,12 +13,17 @@ from preloader import Preloader
 import section_edit, redakt4
 
 class Section(QPushButton):
-    def __init__(self, sect_id=-1, img_path="../../Users/caisilus/Pictures/Saved Pictures/S8HLlscvIvk.jpg", section_name="section name"):
+    def __init__(self, sect_id=-1, img_path="../../Users/caisilus/Pictures/Saved Pictures/S8HLlscvIvk.jpg", 
+            section_name="section name", sectionsWindow=None):
         QPushButton.__init__(self, parent=None)
         self.sect_id = sect_id
-        self.__init_ui__(img_path, section_name)
+        self.img_path = img_path
+        self.section_name = section_name
+        self.sectionsWindow = sectionsWindow
+        self.__init_ui__(img_path)
+        self.clicked.connect(self.edit_clicked)
 
-    def __init_ui__(self, img_path, section_name):
+    def __init_ui__(self, img_path):
         layout = QHBoxLayout()
         self.setLayout(layout)
         self.setMaximumHeight(150)
@@ -41,7 +46,7 @@ class Section(QPushButton):
         font = QFont()
         font.setPointSize(14)
         label_2.setFont(font)
-        label_2.setText(section_name)
+        label_2.setText(self.section_name)
         label_2.setAutoFillBackground(False)
         label_2.setTextFormat(QtCore.Qt.AutoText)
         label_2.setScaledContents(False)
@@ -50,6 +55,12 @@ class Section(QPushButton):
 
     def get_id(self):
         return self.sect_id
+
+    def edit_clicked(self):
+        self.sectionsWindow.forbidDeletion(self.img_path)
+        print("edit clicked")
+        self.sectionsWindow.switch_to_edit_section(self.sect_id, self.section_name, self.img_path)
+
 
 class SectionsWindow(QMainWindow, QWidget):
     #async_sections_sygnal = pyqtSignal()
@@ -60,10 +71,14 @@ class SectionsWindow(QMainWindow, QWidget):
         self.api = SectionsApi(SECTIONS_API)
         self.init_ui()
         self.init_menu()
+        self.forbidden_filename=""
         #self.async_sections_sygnal.connect(self.wrap)
         #self.async_sections_sygnal.emit()
         #self.init_sections()
         
+    def forbidDeletion(self, filename):
+        self.forbidden_filename = filename
+
     def showEvent(self, event):
         #print("show event")
         asyncio.ensure_future(self.init_sections())
@@ -75,7 +90,7 @@ class SectionsWindow(QMainWindow, QWidget):
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
             try:
-                if os.path.isfile(file_path):
+                if os.path.isfile(file_path) and os.path.basename(file_path) != os.path.basename(self.forbidden_filename):
                     os.remove(file_path)
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
@@ -84,7 +99,7 @@ class SectionsWindow(QMainWindow, QWidget):
 
 
     async def init_sections(self):
-        print("init sections")
+        #print("init sections")
         self.sections = await self.api.get_sections()
 
         sections = []
@@ -92,11 +107,12 @@ class SectionsWindow(QMainWindow, QWidget):
             for section_info in self.sections:
                 image_path = await section_info.get_image_path(session) 
                 if (image_path):
-                    section = Section(section_name=section_info.name, sect_id=section_info.sect_id, img_path=image_path)
+                    section = Section(section_name=section_info.name, sect_id=section_info.sect_id, img_path=image_path, sectionsWindow=self)
                     sections.append(section)
                     #self.layout.addWidget(section)
                 else:
-                    section = Section(section_name=section_info.name, sect_id=section_info.sect_id)
+                    section = Section(section_name=section_info.name, sect_id=section_info.sect_id, sectionsWindow=self)
+                    #section.clicked.connect(lambda: section.edit_clicked(self))
                     sections.append(section)
                     #self.layout.addWidget(section)
         
@@ -105,16 +121,27 @@ class SectionsWindow(QMainWindow, QWidget):
         self.preloader.hide()
 
         for section in sections:
+            #section.clicked.connect(lambda: section.edit_clicked(self))
             self.layout.addWidget(section)
 
+
     def add_section_clicked(self):
-        print("clicked!")
+        #print("clicked!")
         self.section_edit_window = section_edit.SectionEditWindow()
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
         self.section_edit_window.show()
         self.close()
         #self.destroy()
+
+
+    def switch_to_edit_section(self, sect_id, sect_name, sect_img):
+        self.section_edit_window = section_edit.SectionEditWindow(sect_id=sect_id, name=sect_name, filepath=sect_img)
+        self.section_edit_window.move(self.pos())
+        self.section_edit_window.resize(self.size())
+        self.section_edit_window.show()
+        self.close()
+
 
     def redakt_action_triggered(self):
         self.redakt_window = redakt4.MainWindow()
@@ -248,10 +275,10 @@ def main():
 
     MainWindow = SectionsWindow()
     MainWindow.show()
-    print("show")
+    #print("show")
     
     with loop:
-        print("loop")
+        #print("loop")
         loop.run_forever()
 
     #sys.exit(app.exec_())

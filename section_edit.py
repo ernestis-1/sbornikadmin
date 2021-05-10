@@ -16,14 +16,19 @@ import global_constants
 import requests
 
 class SectionEditWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, sect_id=None, name=None, filepath=None):
         super().__init__()
+        
+        #existing section parameters
+        self.sect_id = sect_id
+        self.name = name
+        self.image_file_name = filepath
+        
         self.resize(800, 600)
         self.init_ui()
         self.init_menu()
         self.status = QStatusBar()
         self.setStatusBar(self.status)
-        self.image_file_name = None
 
 
     def init_ui(self):
@@ -34,6 +39,8 @@ class SectionEditWindow(QMainWindow):
         font_input = QFont()
         font_input.setPointSize(14)
         self.line_input_head.setFont(font_input)
+        if (self.name):
+            self.line_input_head.setText(self.name)
 
         font_head = QFont()
         font_head.setPointSize(12)
@@ -61,7 +68,11 @@ class SectionEditWindow(QMainWindow):
         self.label_image.setMaximumHeight(175)
         self.label_image.setMinimumWidth(175)
         self.label_image.setMinimumHeight(175)
-        pixmap = QPixmap("images/attach.png")
+        
+        if (self.image_file_name):
+            pixmap = QPixmap(self.image_file_name)
+        else:
+            pixmap = QPixmap("images/attach.png")
         self.label_image.setPixmap(pixmap)
 
         self.button_open = QPushButton('Выбрать картинку')
@@ -154,6 +165,21 @@ class SectionEditWindow(QMainWindow):
         self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
         self.faculty_action.setText(_translate("MainWindow", "Факультет"))
+
+
+    def closeEvent(self, event):
+        import os, shutil
+        folder = 'tempfiles/'
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
+
 
     def _on_open_image(self):
         file_name = QFileDialog.getOpenFileName(self, "Выбор картинки", None, "Image (*.png *.jpg)")[0]

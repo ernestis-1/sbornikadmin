@@ -46,10 +46,10 @@ class SectionsApi:
         #j = r.json()
         l = []
         for sect in j:
-            print(sect)
+            #print(sect)
             _id = sect["id"]
             _name = sect["title"]
             _img_url = sect["picture"]
-            print(_id)
+            #print(_id)
             l.append(SectionInfo(_id, _name, _img_url))
         return l
