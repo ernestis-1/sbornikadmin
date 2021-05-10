@@ -21,132 +21,6 @@ import uuid
 
 
 
-FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64]
-IMAGE_EXTENSIONS = ['.jpg','.png','.bmp','.jpeg']
-HTML_EXTENSIONS = ['.htm', '.html']
-
-
-class NewWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        main_layout = QVBoxLayout()
-        
-        
-
-        self.label_nazv = QLineEdit()#QPlainTextEdit
-        fixedfontnazv = QFontDatabase.systemFont(QFontDatabase.TitleFont)
-        fixedfontnazv.setPointSize(18)
-        self.label_nazv.setFont(fixedfontnazv)
-
-       
-
-        self.button_open = QPushButton('Выбрать картинку')
-        self.button_open.clicked.connect(self._on_open_image)
-
-        self.button_save_as = QPushButton('Сохранить картинку')
-        self.button_save_as.clicked.connect(self._on_save_as_image)
-
-        
-
-       
-
-        self.label_image = QLabel()
-
-        self.label_nazvprot = QLabel("Введите название для статьи:")
-
-        # Путь сохранения файла
-        self.save_file_name = 'C:\img.jpg'
-
-        
-        main_layout.addWidget(self.button_open)
-        main_layout.addWidget(self.button_save_as)
-        main_layout.addWidget(self.label_image)
-        main_layout.addWidget(self.label_nazvprot)
-        main_layout.addWidget(self.label_nazv)
-       
-        
-
-        self.setLayout(main_layout)
-
-    def _on_open_image(self):
-        file_name = QFileDialog.getOpenFileName(self, "Выбор картинки", None, "Image (*.png *.jpg)")[0]
-        if not file_name:
-            return
-
-        pixmap = QPixmap(file_name)
-        self.label_image.setPixmap(pixmap)
-
-    def _on_save_as_image(self):
-        file_name = QFileDialog.getSaveFileName(self, "Сохранение картинки", 'img.jpg', "Image (*.png *.jpg)")[0]
-        if not file_name:
-            return
-        
-        self.label_image.pixmap().save(file_name)
-
-
-
-    def file_saveas(self):#функция для сохранения файла как
-        path, _ = QFileDialog.getSaveFileName(self, "Save file", "", "Text documents (*.txt All files (*.*)")
-
-        if not path:
-            # Если было отменено, то вернется - ''
-            return
-
-        self._save_to_path(path)
-
-
-
-def hexuuid():
-    return uuid.uuid4().hex
-
-def splitext(p):
-    return os.path.splitext(p)[1].lower()
-
-class TextEdit(QTextEdit):
-
-    def canInsertFromMimeData(self, source):
-
-        if source.hasImage():
-            return True
-        else:
-            return super(TextEdit, self).canInsertFromMimeData(source)
-
-    def insertFromMimeData(self, source):
-
-        cursor = self.textCursor()
-        document = self.document()
-
-        if source.hasUrls():
-
-            for u in source.urls():
-                file_ext = splitext(str(u.toLocalFile()))
-                if u.isLocalFile() and file_ext in IMAGE_EXTENSIONS:
-                    image = QImage(u.toLocalFile())
-                    document.addResource(QTextDocument.ImageResource, u, image)
-                    cursor.insertImage(u.toLocalFile())
-
-                else:
-                   
-                    break
-
-            else:
-                # If all were valid images, finish here.
-                return
-
-
-        elif source.hasImage():
-            image = source.imageData()
-            uuid = hexuuid()
-            document.addResource(QTextDocument.ImageResource, uuid, image)
-            cursor.insertImage(uuid)
-            return
-
-        super(TextEdit, self).insertFromMimeData(source)
-
-
-
-
-
 
 class MainWindow(QMainWindow, QWidget):# класс MainWindow
 
@@ -170,10 +44,10 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
 
         layout.addWidget(self.label_nazv)
         
-        self.editor = TextEdit()  # QPlainTextEdit 
+        self.editor = QTextEdit()  # QPlainTextEdit 
         #добавляем виджет в наше окно, просто создаем его как обычно, а затем устанавливаем в центральную позицию виджета для окна
         self.editor.setAutoFormatting(QTextEdit.AutoAll)
-        self.editor.selectionChanged.connect(self.update_format)
+        #self.editor.selectionChanged.connect(self.update_format)
 
         font = QFont('Times', 12)
         self.editor.setFont(font)
@@ -203,7 +77,7 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         file_menu = self.menuBar().addMenu("&File")
 
         self.razdel = QPushButton('Переход в создание раздела')
-        self.razdel.clicked.connect(self.buttonClicked)
+        #self.razdel.clicked.connect(self.buttonClicked)
 
         self.button_open = QPushButton('Выбрать картинку')
         self.button_open.clicked.connect(self._on_open_image)
@@ -334,139 +208,9 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         wrap_action.triggered.connect(self.edit_toggle_wrap)
         edit_menu.addAction(wrap_action)
 
-        format_toolbar = QToolBar("Format")
-        format_toolbar.setIconSize(QSize(16, 16))
-        self.addToolBar(format_toolbar)
-        format_menu = self.menuBar().addMenu("&Format")
+        
 
-        # We need references to these actions/settings to update as selection changes, so attach to self.
-        self.fonts = QFontComboBox()
-        self.fonts.currentFontChanged.connect(self.editor.setCurrentFont)
-        format_toolbar.addWidget(self.fonts)
-
-        self.fontsize = QComboBox()
-        self.fontsize.addItems([str(s) for s in FONT_SIZES])
-
-        # Connect to the signal producing the text of the current selection. Convert the string to float
-        # and set as the pointsize. We could also use the index + retrieve from FONT_SIZES.
-        self.fontsize.currentIndexChanged[str].connect(lambda s: self.editor.setFontPointSize(float(s)) )
-        format_toolbar.addWidget(self.fontsize)
-
-        self.bold_action = QAction(QIcon(os.path.join('images', 'edit-bold.png')), "Bold", self)
-        self.bold_action.setStatusTip("Bold")
-        self.bold_action.setShortcut(QKeySequence.Bold)
-        self.bold_action.setCheckable(True)
-        self.bold_action.toggled.connect(lambda x: self.editor.setFontWeight(QFont.Bold if x else QFont.Normal))
-        format_toolbar.addAction(self.bold_action)
-        format_menu.addAction(self.bold_action)
-
-        self.italic_action = QAction(QIcon(os.path.join('images', 'italic-icon.png')), "Italic", self)
-        self.italic_action.setStatusTip("Italic")
-        self.italic_action.setShortcut(QKeySequence.Italic)
-        self.italic_action.setCheckable(True)
-        self.italic_action.toggled.connect(self.editor.setFontItalic)
-        format_toolbar.addAction(self.italic_action)
-        format_menu.addAction(self.italic_action)
-
-        self.underline_action = QAction(QIcon(os.path.join('images', 'under.png')), "Underline", self)
-        self.underline_action.setStatusTip("Underline")
-        self.underline_action.setShortcut(QKeySequence.Underline)
-        self.underline_action.setCheckable(True)
-        self.underline_action.toggled.connect(self.editor.setFontUnderline)
-        format_toolbar.addAction(self.underline_action)
-        format_menu.addAction(self.underline_action)
-
-        format_menu.addSeparator()
-
-        self.alignl_action = QAction(QIcon(os.path.join('images', 'left.png')), "Align left", self)
-        self.alignl_action.setStatusTip("Align text left")
-        self.alignl_action.setCheckable(True)
-        self.alignl_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignLeft))
-        format_toolbar.addAction(self.alignl_action)
-        format_menu.addAction(self.alignl_action)
-
-        self.alignc_action = QAction(QIcon(os.path.join('images', 'center.png')), "Align center", self)
-        self.alignc_action.setStatusTip("Align text center")
-        self.alignc_action.setCheckable(True)
-        self.alignc_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignCenter))
-        format_toolbar.addAction(self.alignc_action)
-        format_menu.addAction(self.alignc_action)
-
-        self.alignr_action = QAction(QIcon(os.path.join('images', 'right.png')), "Align right", self)
-        self.alignr_action.setStatusTip("Align text right")
-        self.alignr_action.setCheckable(True)
-        self.alignr_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignRight))
-        format_toolbar.addAction(self.alignr_action)
-        format_menu.addAction(self.alignr_action)
-
-        self.alignj_action = QAction(QIcon(os.path.join('images', 'justt.png')), "Justify", self)
-        self.alignj_action.setStatusTip("Justify text")
-        self.alignj_action.setCheckable(True)
-        self.alignj_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignJustify))
-        format_toolbar.addAction(self.alignj_action)
-        format_menu.addAction(self.alignj_action)
-
-        format_group = QActionGroup(self)
-        format_group.setExclusive(True)
-        format_group.addAction(self.alignl_action)
-        format_group.addAction(self.alignc_action)
-        format_group.addAction(self.alignr_action)
-        format_group.addAction(self.alignj_action)
-
-        format_menu.addSeparator()
-
-        # format
-        self._format_actions = [
-            self.fonts,
-            self.fontsize,
-            self.bold_action,
-            self.italic_action,
-            self.underline_action,
-            # signal
-        ]
-
-       
-        self.update_format()
-        self.update_title()
         self.show()
-
-    def block_signals(self, objects, b):
-        for o in objects:
-            o.blockSignals(b)
-
-    def update_format(self):
-        """
-        Update the font format toolbar/actions when a new text selection is made. This is neccessary to keep
-        toolbars/etc. in sync with the current edit state.
-        :return:
-        """   
-        self.block_signals(self._format_actions, True)
-
-        self.fonts.setCurrentFont(self.editor.currentFont())
-        
-        self.fontsize.setCurrentText(str(int(self.editor.fontPointSize())))
-
-        self.italic_action.setChecked(self.editor.fontItalic())
-        self.underline_action.setChecked(self.editor.fontUnderline())
-        self.bold_action.setChecked(self.editor.fontWeight() == QFont.Bold)
-
-        self.alignl_action.setChecked(self.editor.alignment() == Qt.AlignLeft)
-        self.alignc_action.setChecked(self.editor.alignment() == Qt.AlignCenter)
-        self.alignr_action.setChecked(self.editor.alignment() == Qt.AlignRight)
-        self.alignj_action.setChecked(self.editor.alignment() == Qt.AlignJustify)
-
-        self.block_signals(self._format_actions, False)
-
-
-        
-
-        #self.resize(650, 650)
-        #self.update_format()
-        #self.update_title()
-        #self.show()
-
-
-             
 
     def dialog_critical(self, s):#обработка MessageBox
         dlg = QMessageBox(self)
@@ -513,6 +257,7 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
         self._save_to_path(self.path)#сохранение
 
     def file_saveas(self):#функция для сохранения файла как
+        #print(self.editor.toPlainText())
         path, _ = QFileDialog.getSaveFileName(self, "Save file", "", "Text documents (*.txt All files (*.*)")
 
         if not path:
@@ -549,11 +294,11 @@ class MainWindow(QMainWindow, QWidget):# класс MainWindow
     def edit_toggle_wrap(self):
         self.editor.setLineWrapMode( 1 if self.editor.lineWrapMode() == 0 else 0 )
 
-    def buttonClicked(self):
-        self.exPopup = NewWindow()
-        self.exPopup.setWindowTitle("Создание раздела")
-        self.exPopup.setGeometry(100, 200, 100, 100)
-        self.exPopup.show()
+    #def buttonClicked(self):
+        #self.exPopup = NewWindow()
+        #self.exPopup.setWindowTitle("Создание раздела")
+        #self.exPopup.setGeometry(100, 200, 100, 100)
+        #self.exPopup.show()
         
         
     def _on_open_image(self):
