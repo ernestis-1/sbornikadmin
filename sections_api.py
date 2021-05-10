@@ -18,6 +18,15 @@ def write_image(data):
     else:
         return None
 
+async def get_image_path_from_url(session, url):
+    try:
+        async with session.get(url) as response:
+            data = await response.read()
+            tmp_name = write_image(data)
+            return tmp_name
+    except Exception:
+        return None
+
 class SectionInfo:
     def __init__(self, sect_id, name, img_url):
         self.sect_id = sect_id
@@ -25,13 +34,7 @@ class SectionInfo:
         self.img_url = img_url
 
     async def get_image_path(self, session):
-        try:
-            async with session.get(self.img_url) as response:
-                data = await response.read()
-                tmp_name = write_image(data)
-                return tmp_name
-        except Exception:
-            return None
+        return await get_image_path_from_url(session, self.img_url)
 
 
 class ArticleInfo:

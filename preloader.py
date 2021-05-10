@@ -5,12 +5,15 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QMovie
 
 class Preloader(QWidget):
-    def __init__(self):
+    def __init__(self, anim="images/giphy.gif"):
         QWidget.__init__(self, parent=None)
         #self.setFixedSize(260,260)
 
         self.loader = QLabel(self)
-        self.loader_animation = QMovie("images/giphy.gif")
+        #self.loader.setScaledContents(True)
+        #self.loader.setMinimumHeight(200)
+        #self.loader.setMinimumWidth(200)
+        self.loader_animation = QMovie(anim)
         self.loader.setMovie(self.loader_animation)
         self.start_loader_animation()
 

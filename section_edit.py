@@ -345,7 +345,7 @@ class SectionEditWindow(QMainWindow):
         #self.destroy()
 
     def redakt_action_triggered(self):
-        self.redakt_window = redakt4.MainWindow()
+        self.redakt_window = redakt4.EditorWindow()
         self.redakt_window.move(self.pos())
         self.redakt_window.resize(self.size())
         self.redakt_window.show()

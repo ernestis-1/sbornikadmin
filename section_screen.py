@@ -106,7 +106,7 @@ class SectionsWindow(QMainWindow, QWidget):
         sections = []
         async with aiohttp.ClientSession() as session:
             for section_info in self.sections:
-                image_path = await section_info.get_image_path(session) 
+                image_path = await section_info.get_image_path(session)
                 if (image_path):
                     section = Section(section_name=section_info.name, sect_id=section_info.sect_id, img_path=image_path, sectionsWindow=self)
                     sections.append(section)
@@ -145,7 +145,7 @@ class SectionsWindow(QMainWindow, QWidget):
 
 
     def redakt_action_triggered(self):
-        self.redakt_window = redakt4.MainWindow()
+        self.redakt_window = redakt4.EditorWindow()
         self.redakt_window.move(self.pos())
         self.redakt_window.resize(self.size())
         self.redakt_window.show()
