@@ -86,17 +86,19 @@ class SectionEditWindow(QMainWindow):
         self.title_layout.addWidget(self.line_input_head)
         #title_layout.addStretch()
         self.title_layout.addWidget(self.button_create)
-        self.title_layout.addStretch()
+        #self.title_layout.addStretch()
+        self.title_layout.setAlignment(Qt.AlignTop)
 
 
         self.attachment_layout = QVBoxLayout()
 
         self.label_image = QLabel()
         self.label_image.setScaledContents(True)
-        self.label_image.setMaximumWidth(175)
-        self.label_image.setMaximumHeight(175)
-        self.label_image.setMinimumWidth(175)
-        self.label_image.setMinimumHeight(175)
+        label_size = 175
+        self.label_image.setMaximumWidth(label_size)
+        self.label_image.setMaximumHeight(label_size)
+        self.label_image.setMinimumWidth(label_size)
+        self.label_image.setMinimumHeight(label_size)
         
         if (self.image_file_name):
             pixmap = QPixmap(self.image_file_name)
@@ -117,7 +119,8 @@ class SectionEditWindow(QMainWindow):
         self.attachment_layout.addWidget(self.label_image)
         self.attachment_layout.addWidget(self.button_open)
         #self.attachment_layout.addWidget(self.button_delete)
-        self.attachment_layout.addStretch()
+        #self.attachment_layout.addStretch()
+        self.attachment_layout.setAlignment(Qt.AlignTop)
         #attachment_layout.addWidget(self.button_delete)
         if (self.sect_id):
             self.add_delete_button()
@@ -139,7 +142,7 @@ class SectionEditWindow(QMainWindow):
         main_layout.addLayout(horizontal_layout)
         #main_layout.addWidget(self.controlWidget)
         #main_layout.addWidget(self.button_create)
-        main_layout.addStretch()
+        #main_layout.addStretch()
         #self.setLayout(main_layout)
 
         if self.sect_id:
@@ -163,8 +166,8 @@ class SectionEditWindow(QMainWindow):
 
         self.scroller = QScrollArea()
         #self.setCentralWidget(self.scroller)
-        self.scroller.setFixedWidth(650)
-        self.scroller.setMinimumHeight(350)
+        #self.scroller.setFixedWidth(650)
+        #self.scroller.setMinimumHeight(350)
         self.scroller.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.scroller.setWidgetResizable(True)
 
@@ -203,8 +206,9 @@ class SectionEditWindow(QMainWindow):
         self.main_scroll_widget = QGroupBox()
         self.main_scroll_widget.setLayout(self.article_area_layout)
 
-        self.title_layout.insertWidget(self.title_layout.count()-1, self.main_scroll_widget)
-        self.title_layout.insertStretch(self.title_layout.count()-1,10)
+        #self.title_layout.insertWidget(self.title_layout.count()-1, self.main_scroll_widget)
+        self.title_layout.addWidget(self.main_scroll_widget)
+        #self.title_layout.insertStretch(self.title_layout.count()-1,10)
         #self.title_layout.insertLayout(self.title_layout.count()-1, self.article_area_layout)
 
         if self.loading:
