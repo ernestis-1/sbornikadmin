@@ -16,44 +16,84 @@ import os #работа с операционной системой
 import sys#модуль sys(список аргументов командной строки)
 
 import requests
+import asyncio
+import aiohttp
 
 import uuid
 
 import section_screen
 import section_edit
 import global_constants
+from sections_api import FullArticleInfo, ArticleApi
+from preloader import Preloader
 
 
 class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
-    def __init__(self, article_id=None, parent_id=9, article_name=None, images_urls=None, *args, **kwargs):
+    def __init__(self, article_id=None, parent_id=9, article_name=None, *args, **kwargs):
         super(EditorWindow, self).__init__(*args, **kwargs)
        #виджет отображает область редактирования
+        self.api = ArticleApi(global_constants.ARTICLE_API)
         self.article_id = article_id
         self.parent_id = parent_id
         self.article_name = article_name
-        self.photo_urls_list = images_urls
+        self.photo_urls_list = None
+        self.article_text = None
+
         self.new_photoes = []
         #self.photo_filenames_list = []
-        self.init_ui()
-        self.init_menu()
-        self.init_toolbar()
+        if self.article_id is None:
+            self.init_ui()
+            self.init_menu()
+            self.init_toolbar()
+        else:
+            self.init_preloader()
         self.status = QStatusBar()
         self.setStatusBar(self.status)
+
+
+    def init_preloader(self):
+        self.resize(800,600)
+        self.preloader = Preloader()
+        self.setCentralWidget(self.preloader)
+
+
+    def add_delete_button(self):
+        self.button_delete = QPushButton("Удалить статью")
+        #self.button_delete.setText("Удалить")
+        self.button_delete.setFont(self.button_font)
+        self.button_delete.setIcon(QIcon("images/bin.png"))
+        self.button_delete.setIconSize(QSize(20,20))
+        #self.button_delete.setMaximumWidth(50)
+        self.button_delete.clicked.connect(self.delete_article)
+        self.head_layout.addWidget(self.button_delete)
 
 
     def init_ui(self):
         self.resize(800,600)
 
+        self.button_font = QFont()
+        self.button_font.setPointSize(10)
+
         layout = QVBoxLayout()
 
-        self.label_nazvprot = QLabel("Введите название для статьи:")
-        layout.addWidget(self.label_nazvprot)
+        self.head_layout = QHBoxLayout()
         
+        self.label_nazvprot = QLabel("Введите название для статьи:")
+        self.head_layout.addWidget(self.label_nazvprot)
+        self.head_layout.addStretch()
+
+        layout.addLayout(self.head_layout)
+        
+        if (self.article_id):
+            self.add_delete_button()
+
         self.label_nazv = QLineEdit(self)
         fixedfontnazv = QFont() #QFontDatabase.systemFont(QFontDatabase.TitleFont)
-        fixedfontnazv.setPointSize(16)
+        fixedfontnazv.setPointSize(14)
         self.label_nazv.setFont(fixedfontnazv)
+        if self.article_name:
+            self.label_nazv.setText(self.article_name)
         layout.addWidget(self.label_nazv)
         
         self.editor = QTextEdit()  # QPlainTextEdit 
@@ -65,6 +105,9 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.editor.setFont(font)
 
         self.editor.setFontPointSize(12) 
+
+        if self.article_text:
+            self.editor.setPlainText(self.article_text)
 
         # self.path(содержит путь к текущему открытому файлу)
         # Если "None", получается, что файл еще не открыт (или создается новый).
@@ -221,6 +264,24 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         #edit_menu.addAction(wrap_action)
 
 
+    def sections_list_action_triggered(self):
+        self.sections_window = section_screen.SectionsWindow()
+        self.sections_window.move(self.pos())
+        self.sections_window.resize(self.size())
+        self.sections_window.show()
+        self.close()
+        #self.destroy()
+
+    
+    def section_edit_action_triggered(self):
+        #print("clicked!")
+        self.section_edit_window = section_edit.SectionEditWindow()
+        self.section_edit_window.move(self.pos())
+        self.section_edit_window.resize(self.size())
+        self.section_edit_window.show()
+        self.close()
+        #self.destroy()
+
 
     def init_menu(self):
         self.menubar = QtWidgets.QMenuBar(self)
@@ -240,11 +301,11 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
         self.sections_list_action = QtWidgets.QAction(self)
         self.sections_list_action.setObjectName("sectionslistaction")
-        #self.sections_list_action.triggered.connect(self.sections_list_action_triggered)
+        self.sections_list_action.triggered.connect(self.sections_list_action_triggered)
         
         self.section_creation = QtWidgets.QAction(self)
         self.section_creation.setObjectName("action_2")
-        #self.section_creation.triggered.connect(self.add_section_clicked)
+        self.section_creation.triggered.connect(self.section_edit_action_triggered)
 
         #self.article_creation = QtWidgets.QAction(self)
         #self.article_creation.setObjectName("action_3")
@@ -287,6 +348,11 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         dlg.setText(s)
         dlg.setIcon(QMessageBox.Critical)
         dlg.show()
+
+
+    def showEvent(self, event):
+        if (self.article_id):
+            asyncio.ensure_future(self.init_content())
 
      
 #определяем file_open метод, который при запуске использует QFileDialog.getOpenFileName
@@ -362,6 +428,40 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         #self.exPopup.show()
 
 
+    async def init_content(self):
+        full_info = await self.api.get_article(self.article_id)
+        self.article_name = full_info.article_title
+        self.article_text = full_info.article_text
+        self.parent_id = full_info.parent_id
+        self.photo_urls_list = full_info.pictures_urls
+
+        photoes = []
+        async with aiohttp.ClientSession() as session:
+            photoes = await full_info.get_images(session)
+
+        self.preloader.stop_loader_animation()
+        self.init_ui()
+        self.init_menu()
+        self.init_toolbar()
+        self.status = QStatusBar()
+        self.setStatusBar(self.status)
+
+        for photo in photoes:
+            self.add_image(photo)
+        
+
+
+    def add_image(self, filename):
+        pixmap = QPixmap(filename)
+        label_image = QLabel()
+        label_image.setPixmap(pixmap)
+        label_image.setScaledContents(True)
+        label_image.setMaximumWidth(75)
+        label_image.setMinimumHeight(75)
+        self.label_images.append(label_image)
+        self.scrollLayout.insertWidget(self.scrollLayout.count()-1, label_image)
+
+
     def _on_open_image(self):
         file_name = QFileDialog.getOpenFileName(self, "Выбор картинки", None, "Image (*.png *.jpg)")[0]
         #print(file_name)
@@ -371,20 +471,11 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         #filepath = file_name.split("/")[-1]
         #file_name1 = file_name.resize((10, 10))
 
-        #self.photo_filenames_list.append(file_name)
         self.new_photoes.append(file_name)
 
-        pixmap = QPixmap(file_name)
-        label_image = QLabel()
-        label_image.setPixmap(pixmap)
-        label_image.setScaledContents(True)
-        label_image.setMaximumWidth(75)
-        label_image.setMinimumHeight(75)
-        self.label_images.append(label_image)
-        self.scrollLayout.insertWidget(self.scrollLayout.count()-1, label_image)
-        #self.label_image.setText(filepath)
+        self.add_image(file_name)
+        
 
-        #self.label_image.setPixmap(pixmap)
 
     def clear_images(self):
         #print("clear")
@@ -415,7 +506,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
                     "id": self.article_id,
                     "isMain" : False,
                     "title" : str(self.label_nazv.text()),
-                    "text": "...",
+                    "text": self.editor.toPlainText(),
                     "parentId": self.parent_id,
                     "pictures": self.photo_urls_list
                 }
@@ -440,9 +531,25 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
                 self.status.showMessage("Статья отправлена")
                 self.button_edit_article.setText("Отправить изменения")
                 self.article_id = res.json()['id']
+                self.add_delete_button()
             except Exception as e:
                 self.status.showMessage("Ошибка при отправке статьи")
-        
+
+
+    def delete_article(self):
+        if self.article_id is None:
+            return
+        #payload = {'id': self.sect_id}
+        try:
+            r = requests.delete(global_constants.ARTICLE_API+f"/{self.article_id}")
+            if (r.status_code == 200):
+                self.status.showMessage("Статья удалена!")
+                self.sections_list_action_triggered()
+            else:
+                self.status.showMessage("Ошибка при удалении!")
+                print(r.status_code)
+        except Exception as e:
+            self.status.showMessage("Ошибка при отправке запроса!") 
 
 
 def get_photo_uri(path_img):

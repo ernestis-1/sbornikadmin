@@ -19,14 +19,21 @@ import requests
 import asyncio
 
 class Article(QPushButton):
-    def __init__(self, article_info=None):
+    def __init__(self, article_info=None, sectionEditWindow=None):
         QPushButton.__init__(self, text=article_info.article_title)
         self.article_id = article_info.article_id
         self.article_title = article_info.article_title
+        self.sectionEditWindow = sectionEditWindow
         font = QFont()
         font.setPointSize(11)
         self.setFont(font)
+        self.clicked.connect(self.edit_article_clicked)
         #self.setFixedWidth(450)
+
+    def edit_article_clicked(self):
+        print(self.article_id)
+        if (self.sectionEditWindow):
+            self.sectionEditWindow.edit_article_triggered(self.article_id, self.article_title)
 
 
 
@@ -39,7 +46,7 @@ class SectionEditWindow(QMainWindow):
         self.name = name
         self.image_file_name = filepath
         self.img_url = img_url
-        self.just_created = False
+        self.loading = (sect_id is not None)
         
         self.api = SectionsApi(global_constants.SECTIONS_API)
         
@@ -145,6 +152,7 @@ class SectionEditWindow(QMainWindow):
 
     def showEvent(self, event):
         if self.sect_id:
+            self.loading = True
             asyncio.ensure_future(self.init_articles())
 
 
@@ -182,7 +190,7 @@ class SectionEditWindow(QMainWindow):
         self.add_article_button = QPushButton("+")
         self.add_article_button.setFont(font)
         self.add_article_button.setMaximumWidth(100)
-        #self.add_article_button.clicked.connect(self.add_section_clicked)
+        self.add_article_button.clicked.connect(lambda: self.edit_article_triggered(article_id=None, article_name=None))
 
         head_article_list_layout.addWidget(self.head_article_list_label)
         head_article_list_layout.addWidget(self.add_article_button)
@@ -199,10 +207,10 @@ class SectionEditWindow(QMainWindow):
         self.title_layout.insertStretch(self.title_layout.count()-1,10)
         #self.title_layout.insertLayout(self.title_layout.count()-1, self.article_area_layout)
 
-        if not self.just_created:
+        if self.loading:
             #print("preloader")
             self.preloader = Preloader()
-            self.scrollerLayout.addWidget(self.preloader)
+            self.scrollerLayout.addWidget(self.preloader)    
         else:
             self.preloder = None
             #print("no preloader")
@@ -214,11 +222,12 @@ class SectionEditWindow(QMainWindow):
         self.preloader.stop_loader_animation()
         self.scrollerLayout.removeWidget(self.preloader)
         self.preloader.hide()
+        self.loading = False
         if article_infos is None:
             return
         #self.article_buttons = []
         for article_info in article_infos:
-            article = Article(article_info)
+            article = Article(article_info, self)
             self.scrollerLayout.addWidget(article)
             #self.article_buttons.append()
         self.scrollerLayout.addStretch()
@@ -344,6 +353,18 @@ class SectionEditWindow(QMainWindow):
         self.close()
         #self.destroy()
 
+    def edit_article_triggered(self, article_id=None, article_name=None):
+        print("triggered!")
+        if (self.loading):
+            return
+        print(article_id is None)
+        self.article_window = redakt4.EditorWindow(article_id=article_id, parent_id=self.sect_id, article_name=article_name)
+        self.article_window.move(self.pos())
+        self.article_window.resize(self.size())
+        self.article_window.show()
+        self.close()
+
+
     def redakt_action_triggered(self):
         self.redakt_window = redakt4.EditorWindow()
         self.redakt_window.move(self.pos())
@@ -375,7 +396,7 @@ class SectionEditWindow(QMainWindow):
                     self.sect_id = r.json()['id']
                     self.name = r.json()['title']
                     self.add_delete_button()
-                    self.just_created = True
+                    #self.just_created = True
                     self.init_article_area()
                 else:
                     print(r.status_code)

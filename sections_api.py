@@ -79,3 +79,30 @@ class SectionsApi:
             l.append(ArticleInfo(article_data['id'], article_data['title']))
         return l
         
+
+class FullArticleInfo:
+    def __init__(self, article_id, article_title, article_text, parent_id, pictures_urls):
+        self.article_id = article_id
+        self.article_title = article_title
+        self.article_text = article_text
+        self.parent_id = parent_id
+        self.pictures_urls = pictures_urls
+
+    async def get_images(self, session):
+        filenames = []
+        for url in self.pictures_urls:
+            filename = await get_image_path_from_url(session, url)
+            if filename:
+                filenames.append(filename)
+        return filenames
+
+
+class ArticleApi:
+    def __init__(self, url):
+        self.url = url
+
+    async def get_article(self, article_id):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.url+f"/{article_id}") as r:
+                j = await r.json()
+        return FullArticleInfo(article_id=j['id'], article_title=j['title'], article_text=j['text'], parent_id=j['parentId'], pictures_urls=j['pictures'])
