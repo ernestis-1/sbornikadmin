@@ -11,6 +11,7 @@ from global_constants import SECTIONS_API
 from preloader import Preloader
 #from section_edit import SectionEditWindow
 import section_edit, redakt4
+import faculties_screen
 
 class Section(QPushButton):
     def __init__(self, sect_id=-1, img_path=None, section_name="section name", sectionsWindow=None):
@@ -139,6 +140,14 @@ class SectionsWindow(QMainWindow, QWidget):
         #self.destroy()
 
 
+    def switch_to_faculty(self):
+        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window.move(self.pos())
+        self.faculties_window.resize(self.size())
+        self.faculties_window.show()
+        self.close()
+
+
     def switch_to_edit_section(self, sect_id, sect_name, sect_img):
         self.section_edit_window = section_edit.SectionEditWindow(sect_id=sect_id, name=sect_name, filepath=sect_img)
         self.section_edit_window.move(self.pos())
@@ -245,6 +254,7 @@ class SectionsWindow(QMainWindow, QWidget):
         
         self.faculty_action = QtWidgets.QAction(self)
         self.faculty_action.setObjectName("action_5")
+        self.faculty_action.triggered.connect(self.switch_to_faculty)
         
         #self.menu_screens.addAction(self.sections_list_action)
         self.menu_screens.addAction(self.section_creation)

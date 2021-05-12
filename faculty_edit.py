@@ -23,20 +23,53 @@ import aiohttp
 import uuid
 
 from preloader import Preloader
+from sections_api import get_image_path_from_url
+import global_constants
+import section_screen, faculties_screen
+import redakt4
+import faculties_screen
 
 
 class FacultyEditWindow(QMainWindow):
-    def __init__(self, fac_id=None, fac_name=None, fac_info=None):
+    def __init__(self, fac_id=None, fac_name=None, fac_info=None, img_url=None):
         super().__init__()
         self.resize(800, 600)
         self.fac_id = fac_id
         self.fac_name = fac_name
         self.fac_info = fac_info
+        self.img_url = img_url
+        self.img_path = None
+        if img_url is None:
+            self.init_ui()
+            self.init_menu()
+            self.init_toolbar()
+        else:
+            self.init_preloader()
+        
+        self.status = QStatusBar()
+        self.setStatusBar(self.status)
+
+    def init_preloader(self):
+        self.resize(800,600)
+        self.preloader = Preloader()
+        self.setCentralWidget(self.preloader)
+
+
+    async def init_content(self):
+        async with aiohttp.ClientSession() as session:
+            self.img_path = await get_image_path_from_url(session, self.img_url)
+
+        self.preloader.stop_loader_animation()
         self.init_ui()
         self.init_menu()
         self.init_toolbar()
         self.status = QStatusBar()
         self.setStatusBar(self.status)
+
+    
+    def showEvent(self, event):
+        if (self.img_url):
+            asyncio.ensure_future(self.init_content())
 
         
     def init_ui(self):
@@ -61,9 +94,11 @@ class FacultyEditWindow(QMainWindow):
 
         #send_font = QFont()
         #send_font.setPointSize(15)
-        self.button_send = QPushButton('Отправить изменения')
+        self.button_send = QPushButton('Создать факультет')
+        if self.fac_id:
+            self.button_send.setText('Отправить изменения')
         self.button_send.setFont(head_font)
-        #self.button_send.clicked.connect(self.send_edit)
+        self.button_send.clicked.connect(self.edit_faculty)
         self.button_send.setMinimumHeight(45)
 
 
@@ -78,7 +113,7 @@ class FacultyEditWindow(QMainWindow):
 
         self.label_image = QLabel()
         self.label_image.setScaledContents(True)
-        label_size = 175
+        label_size = 180
         self.label_image.setMaximumWidth(label_size)
         self.label_image.setMaximumHeight(label_size)
         self.label_image.setMinimumWidth(label_size)
@@ -86,6 +121,8 @@ class FacultyEditWindow(QMainWindow):
         
         
         pixmap = QPixmap("images/attach.png")
+        if (self.img_path):
+            pixmap = QPixmap(self.img_path)
         self.label_image.setPixmap(pixmap)
 
         self.button_font = QFont()
@@ -94,7 +131,7 @@ class FacultyEditWindow(QMainWindow):
         self.button_open = QPushButton('Выбрать картинку')
         self.button_open.setFont(self.button_font)
         self.button_open.clicked.connect(self._on_open_image)
-        self.button_open.setMaximumWidth(label_size)
+        #self.button_open.setMaximumWidth(label_size)
         
         self.attachment_layout = QVBoxLayout()
 
@@ -104,6 +141,9 @@ class FacultyEditWindow(QMainWindow):
         #self.attachment_layout.addWidget(self.button_delete)
         #self.attachment_layout.addStretch()
         #attachment_layout.addWidget(self.button_delete)
+
+        if (self.fac_id):
+            self.add_delete_button()
         
 
         horizontal_layout = QHBoxLayout()
@@ -146,6 +186,23 @@ class FacultyEditWindow(QMainWindow):
         self.main_widget.setLayout(main_layout)
         self.setCentralWidget(self.main_widget)
 
+
+    def add_delete_button(self):
+        self.button_delete = QPushButton("Удалить факультет")
+        #self.button_delete.setText("Удалить")
+        #font = QFont()
+        #font.setPointSize(9)
+        #self.button_delete.setFont(font)
+        self.button_delete.setFont(self.button_font)
+        self.button_delete.setIcon(QIcon("images/bin.png"))
+        self.button_delete.setIconSize(QSize(20,20))
+        #self.button_delete.setMaximumWidth(175)
+        self.button_delete.clicked.connect(self.delete_faculty)
+        
+        #self.attachment_layout.insertWidget(self.attachment_layout.count()-1, self.button_delete)
+        self.attachment_layout.addWidget(self.button_delete)
+        #self.attachment_layout.addStretch()
+
     
     def init_menu(self):
         self.menubar = QtWidgets.QMenuBar(self)
@@ -159,31 +216,32 @@ class FacultyEditWindow(QMainWindow):
         self.menu_modes.setObjectName("menumodes")
         
         self.setMenuBar(self.menubar)
-        #self.statusbar = QtWidgets.QStatusBar(self)
-        #self.statusbar.setObjectName("statusbar")
-        #self.setStatusBar(self.statusbar)
+        self.statusbar = QtWidgets.QStatusBar(self)
+        self.statusbar.setObjectName("statusbar")
+        self.setStatusBar(self.statusbar)
 
-        #self.sections_list_action = QtWidgets.QAction(self)
-        #self.sections_list_action.setObjectName("sectionslistaction")
-        #self.sections_list_action.triggered.connect(self.sections_list_action_triggered)
+        self.faculties_list_action = QtWidgets.QAction(self)
+        self.faculties_list_action.setObjectName("sectionslistaction")
+        self.faculties_list_action.triggered.connect(self.faculties_list_action_triggered)
         
-        self.section_creation = QtWidgets.QAction(self)
-        self.section_creation.setObjectName("action_2")
-        #self.section_creation.triggered.connect(self.add_section_clicked)
+        self.faculty_creation = QtWidgets.QAction(self)
+        self.faculty_creation.setObjectName("action_2")
+        #self.faculty_creation.triggered.connect(self.add_faculty_clicked)
 
-        self.article_creation = QtWidgets.QAction(self)
-        self.article_creation.setObjectName("action_3")
+        #self.article_creation = QtWidgets.QAction(self)
+        #self.article_creation.setObjectName("action_3")
         #self.article_creation.triggered.connect(self.redakt_action_triggered)
         
         self.sbornic_action = QtWidgets.QAction(self)
         self.sbornic_action.setObjectName("action_4")
+        self.sbornic_action.triggered.connect(self.switch_to_sbornic)
         
         self.faculty_action = QtWidgets.QAction(self)
         self.faculty_action.setObjectName("action_5")
         
-        #self.menu_screens.addAction(self.sections_list_action)
-        self.menu_screens.addAction(self.section_creation)
-        self.menu_screens.addAction(self.article_creation)
+        self.menu_screens.addAction(self.faculties_list_action)
+        #self.menu_screens.addAction(self.faculty_creation)
+        #self.menu_screens.addAction(self.article_creation)
         
         self.menu_modes.addAction(self.sbornic_action)
         self.menu_modes.addAction(self.faculty_action)
@@ -201,11 +259,27 @@ class FacultyEditWindow(QMainWindow):
         #self.setWindowTitle(_translate("MainWindow", "Редактирование раздела"))
         self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
-        #self.sections_list_action.setText(_translate("MainWindow", "Список разделов"))
-        self.section_creation.setText(_translate("MainWindow", "Создание раздела"))
-        self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
+        self.faculties_list_action.setText(_translate("MainWindow", "Список разделов"))
+        self.faculty_creation.setText(_translate("MainWindow", "Создание факультета"))
+        #self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
         self.faculty_action.setText(_translate("MainWindow", "Факультет"))
+
+
+    def faculties_list_action_triggered(self):
+        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window.move(self.pos())
+        self.faculties_window.resize(self.size())
+        self.faculties_window.show()
+        self.close()
+
+
+    def switch_to_sbornic(self):
+        self.sbornic_screen = section_screen.SectionsWindow()
+        self.sbornic_screen.move(self.pos())
+        self.sbornic_screen.resize(self.size())
+        self.sbornic_screen.show()
+        self.close()
 
     
     def init_toolbar(self):
@@ -288,6 +362,82 @@ class FacultyEditWindow(QMainWindow):
         #edit_menu.addAction(wrap_action)
 
 
+    def edit_faculty(self):
+        #print("edit section")
+        #s = self.button_create.text()
+        if self.fac_id is None:
+            self.button_send.setText("Отправить изменения")
+            try:
+                #print(self.line_input_head.text())
+                j = {
+                        "name": str(self.line_input_head.text()),
+                        "info": self.editor.toPlainText(),
+                        "picture": "",
+                    }
+                if (self.img_path):
+                    j["picture"] = redakt4.get_photo_uri(self.img_path)
+                #print(j)
+                r = requests.post(global_constants.FACULTIES_API, json=j)
+                if (r.status_code == 200):
+                    self.status.showMessage("Факультет создан!")
+                    #print(r.json())
+                    self.fac_id = r.json()['id']
+                    self.name = r.json()['name']
+                    self.add_delete_button()
+                else:
+                    print(r.status_code)
+            except Exception as e:
+                self.status.showMessage("Ошибка!")
+                print(e)
+            #self.status.showMessage("Раздел создан!")
+        else:
+            j = {
+                    "id": self.fac_id,
+                    "name": str(self.line_input_head.text()),
+                    "info": self.editor.toPlainText(),
+                    "picture": ""
+                }
+            if self.img_url:
+                j["picture"] = self.img_url
+            else:
+                if (self.img_path):
+                    try:
+                        j["picture"] = redakt4.get_photo_uri(self.img_path)
+                    except Exception as e:
+                        print(e)
+                else:
+                    pass
+            try:
+                r = requests.put(global_constants.FACULTIES_API, json=j)
+                if (r.status_code == 200):
+                    self.status.showMessage("Изменения отправлены!")
+                    #print(r.json())
+                    self.sect_id = r.json()['id']
+                    self.name = r.json()['name']
+                else:
+                    print(r.status_code)
+            except Exception as e:
+                self.status.showMessage("Ошибка при отправке!")
+            #print("section exists")
+
+
+    def delete_faculty(self):
+        if self.fac_id is None:
+            return
+        #payload = {'id': self.sect_id}
+        try:
+            r = requests.delete(global_constants.FACULTIES_API+f"/{self.fac_id}")
+            if (r.status_code == 200):
+                self.status.showMessage("Факультет удалён!")
+                self.faculties_list_action_triggered()
+            else:
+                self.status.showMessage("Ошибка при удалении. Возможно, этот раздел нельзя удалить")
+                print(r.status_code)
+        except Exception as e:
+            #self.print(e.messa)
+            self.status.showMessage("Ошибка при отправке запроса!")
+
+
     def file_open(self):#функция для открытия файла
         path, _ = QFileDialog.getOpenFileName(self, "Open file", "", "Text documents (*.txt);All files (*.*)")
          #конструкции try except
@@ -356,6 +506,8 @@ class FacultyEditWindow(QMainWindow):
         if not file_name:
             return
         
+        self.img_path = file_name
+        self.img_url = None
         background = QPixmap(file_name) #.scaled(100,100) 
         #pixmap = QPixmap(file_name)
         self.label_image.setPixmap(background)

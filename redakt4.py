@@ -23,6 +23,7 @@ import uuid
 
 import section_screen
 import section_edit
+import faculties_screen
 import global_constants
 from sections_api import FullArticleInfo, ArticleApi
 from preloader import Preloader
@@ -282,6 +283,14 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.close()
         #self.destroy()
 
+    
+    def switch_to_faculty(self):
+        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window.move(self.pos())
+        self.faculties_window.resize(self.size())
+        self.faculties_window.show()
+        self.close()
+
 
     def init_menu(self):
         self.menubar = QtWidgets.QMenuBar(self)
@@ -316,7 +325,8 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         
         self.faculty_action = QtWidgets.QAction(self)
         self.faculty_action.setObjectName("action_5")
-        
+        self.faculty_action.triggered.connect(self.switch_to_faculty)
+
         self.menu_screens.addAction(self.sections_list_action)
         self.menu_screens.addAction(self.section_creation)
         #self.menu_screens.addAction(self.article_creation)

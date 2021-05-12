@@ -28,14 +28,16 @@ from preloader import Preloader
 from faculty_api import FacultiesApi, BaseFacultyInfo
 import faculty_edit
 import global_constants
+import section_screen
 
 
 class Faculty(QPushButton):
-    def __init__(self, fac_id=None, fac_name=None, info=None, img_path="images/building.png", facultiesWindow=None):
+    def __init__(self, fac_id=None, fac_name=None, info=None, img_path="images/building.png", img_url=None, facultiesWindow=None):
         QPushButton.__init__(self)
         self.fac_id = fac_id
         self.fac_name = fac_name
         self.info = info
+        self.img_url = img_url
         self.facultiesWindow = facultiesWindow
         self.init_ui(img_path)
         self.clicked.connect(self.edit_clicked)
@@ -79,7 +81,7 @@ class Faculty(QPushButton):
     
     def edit_clicked(self):
         #print("edit clicked")
-        self.facultiesWindow.switch_to_edit_faculty(self.fac_id, self.fac_name, self.info)
+        self.facultiesWindow.switch_to_edit_faculty(self.fac_id, self.fac_name, self.info, self.img_url)
         
 
 
@@ -163,7 +165,7 @@ class FacultiesWindow(QMainWindow):
         faculties = []
         async with aiohttp.ClientSession() as session:
             for fac in self.faculties:
-                faculty = Faculty(fac_id=fac.fac_id, fac_name=fac.fac_name, info=fac.info, facultiesWindow=self)
+                faculty = Faculty(fac_id=fac.fac_id, fac_name=fac.fac_name, info=fac.info, img_url=fac.img_url, facultiesWindow=self)
                 faculties.append(faculty)
                 #self.layout.addWidget(section)
         
@@ -188,11 +190,19 @@ class FacultiesWindow(QMainWindow):
         #self.destroy()
 
 
-    def switch_to_edit_faculty(self, fact_id, fac_name, fac_info):
-        self.section_edit_window = faculty_edit.FacultyEditWindow(fac_id=fact_id, fac_name=fac_name, fac_info=fac_info)
+    def switch_to_edit_faculty(self, fact_id, fac_name, fac_info, img_url):
+        self.section_edit_window = faculty_edit.FacultyEditWindow(fac_id=fact_id, fac_name=fac_name, fac_info=fac_info, img_url=img_url)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
         self.section_edit_window.show()
+        self.close()
+
+
+    def switch_to_sbornic(self):
+        self.sbornic_screen = section_screen.SectionsWindow()
+        self.sbornic_screen.move(self.pos())
+        self.sbornic_screen.resize(self.size())
+        self.sbornic_screen.show()
         self.close()
 
 
@@ -216,23 +226,24 @@ class FacultiesWindow(QMainWindow):
         #self.sections_list_action.setObjectName("sectionslistaction")
         #self.sections_list_action.triggered.connect(self.sections_list_action_triggered)
         
-        self.section_creation = QtWidgets.QAction(self)
-        self.section_creation.setObjectName("action_2")
-        #self.section_creation.triggered.connect(self.add_section_clicked)
+        self.faculty_creation = QtWidgets.QAction(self)
+        self.faculty_creation.setObjectName("action_2")
+        self.faculty_creation.triggered.connect(self.add_faculty_clicked)
 
-        self.article_creation = QtWidgets.QAction(self)
-        self.article_creation.setObjectName("action_3")
+        #self.article_creation = QtWidgets.QAction(self)
+        #self.article_creation.setObjectName("action_3")
         #self.article_creation.triggered.connect(self.redakt_action_triggered)
         
         self.sbornic_action = QtWidgets.QAction(self)
         self.sbornic_action.setObjectName("action_4")
+        self.sbornic_action.triggered.connect(self.switch_to_sbornic)
         
         self.faculty_action = QtWidgets.QAction(self)
         self.faculty_action.setObjectName("action_5")
         
         #self.menu_screens.addAction(self.sections_list_action)
-        self.menu_screens.addAction(self.section_creation)
-        self.menu_screens.addAction(self.article_creation)
+        self.menu_screens.addAction(self.faculty_creation)
+        #self.menu_screens.addAction(self.article_creation)
         
         self.menu_modes.addAction(self.sbornic_action)
         self.menu_modes.addAction(self.faculty_action)
@@ -251,8 +262,8 @@ class FacultiesWindow(QMainWindow):
         self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
         #self.sections_list_action.setText(_translate("MainWindow", "Список разделов"))
-        self.section_creation.setText(_translate("MainWindow", "Создание раздела"))
-        self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
+        self.faculty_creation.setText(_translate("MainWindow", "Создание факультета"))
+        #self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
         self.faculty_action.setText(_translate("MainWindow", "Факультет"))
 

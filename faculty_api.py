@@ -1,10 +1,11 @@
 import aiohttp
 
 class BaseFacultyInfo:
-    def __init__(self, fac_id, fac_name, info):
+    def __init__(self, fac_id, fac_name, info, img_url):
         self.fac_id = fac_id
         self.fac_name = fac_name
         self.info = info
+        self.img_url = img_url
 
 
 
@@ -23,5 +24,6 @@ class FacultiesApi:
             _id = fac["id"]
             _name = fac["name"]
             _info = fac["info"]
-            l.append(BaseFacultyInfo(_id, _name, _info))
+            _picture = fac["picture"]
+            l.append(BaseFacultyInfo(_id, _name, _info, _picture))
         return l

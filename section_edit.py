@@ -14,6 +14,7 @@ from sections_api import SectionsApi, ArticleInfo
 from preloader import Preloader
 import section_screen
 import redakt4
+import faculties_screen
 import global_constants
 import requests
 import asyncio
@@ -269,6 +270,7 @@ class SectionEditWindow(QMainWindow):
         
         self.faculty_action = QtWidgets.QAction(self)
         self.faculty_action.setObjectName("action_5")
+        self.faculty_action.triggered.connect(self.switch_to_faculty)
         
         self.menu_screens.addAction(self.sections_list_action)
         #self.menu_screens.addAction(self.section_creation)
@@ -305,8 +307,8 @@ class SectionEditWindow(QMainWindow):
         #self.button_delete.setMaximumWidth(50)
         self.button_delete.clicked.connect(self.delete_section)
         
-        self.attachment_layout.insertWidget(self.attachment_layout.count()-1, self.button_delete)
-        #self.attachment_layout.addWidget(self.button_delete)
+        #self.attachment_layout.insertWidget(self.attachment_layout.count()-1, self.button_delete)
+        self.attachment_layout.addWidget(self.button_delete)
         #self.attachment_layout.addStretch()
 
 
@@ -320,7 +322,7 @@ class SectionEditWindow(QMainWindow):
                 self.status.showMessage("Раздел удалён!")
                 self.sections_list_action_triggered()
             else:
-                self.status.showMessage("Ошибка при удалении!")
+                self.status.showMessage("Ошибка при удалении. Возможно, этот раздел нельзя удалить")
                 print(r.status_code)
         except Exception as e:
             self.status.showMessage("Ошибка при отправке запроса!")
@@ -375,6 +377,14 @@ class SectionEditWindow(QMainWindow):
         self.redakt_window.resize(self.size())
         self.redakt_window.show()
         self.close()
+
+    def switch_to_faculty(self):
+        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window.move(self.pos())
+        self.faculties_window.resize(self.size())
+        self.faculties_window.show()
+        self.close()
+
 
     def edit_section_clicked(self):
         #print("edit section")
