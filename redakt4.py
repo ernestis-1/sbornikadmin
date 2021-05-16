@@ -3,7 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtPrintSupport import *
-from PIL import Image, ImageDraw, ImageFont
+#from PIL import Image, ImageDraw, ImageFont
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtPrintSupport import *
@@ -363,6 +363,20 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
     def showEvent(self, event):
         if (self.article_id):
             asyncio.ensure_future(self.init_content())
+
+
+    def closeEvent(self, event):
+        import os, shutil
+        folder = 'tempfiles/'
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
 
      
 #определяем file_open метод, который при запуске использует QFileDialog.getOpenFileName

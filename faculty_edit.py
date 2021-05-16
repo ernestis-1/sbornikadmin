@@ -27,7 +27,7 @@ from sections_api import get_image_path_from_url
 import global_constants
 import section_screen, faculties_screen
 import redakt4
-import faculties_screen
+import contacts_screen
 
 
 class FacultyEditWindow(QMainWindow):
@@ -72,6 +72,20 @@ class FacultyEditWindow(QMainWindow):
             asyncio.ensure_future(self.init_content())
 
         
+    def closeEvent(self, event):
+        import os, shutil
+        folder = 'tempfiles/'
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+        
     def init_ui(self):
         self.main_widget = QWidget()
         main_layout = QVBoxLayout()
@@ -92,6 +106,7 @@ class FacultyEditWindow(QMainWindow):
             self.line_input_head.setText(self.fac_name)
 
 
+
         #send_font = QFont()
         #send_font.setPointSize(15)
         self.button_send = QPushButton('Создать факультет')
@@ -105,10 +120,15 @@ class FacultyEditWindow(QMainWindow):
         #self.title_layout.addStretch()
         self.title_layout.addWidget(self.label_head)
         self.title_layout.addWidget(self.line_input_head)
-        self.title_layout.addWidget(self.button_send)
+        #self.title_layout.addWidget(self.button_send)
         self.title_layout.setAlignment(Qt.AlignTop)
         #self.title_layout.addStretch()
 
+        self.buttonContacts = QPushButton("Перейти к контактам")
+        self.buttonContacts.setFont(head_font)
+        self.buttonContacts.clicked.connect(self.open_contacts)
+
+        self.title_layout.addWidget(self.buttonContacts)
 
 
         self.label_image = QLabel()
@@ -173,11 +193,8 @@ class FacultyEditWindow(QMainWindow):
 
         self.title_layout.addLayout(editor_head_layout)
         self.title_layout.addWidget(self.editor)
-
-        self.buttonContacts = QPushButton("Перейти к контактам")
-        self.buttonContacts.setFont(head_font)
-
-        self.title_layout.addWidget(self.buttonContacts)
+        self.title_layout.addWidget(self.button_send)
+        
 
 
         main_layout.addLayout(horizontal_layout)
@@ -259,7 +276,7 @@ class FacultyEditWindow(QMainWindow):
         #self.setWindowTitle(_translate("MainWindow", "Редактирование раздела"))
         self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
-        self.faculties_list_action.setText(_translate("MainWindow", "Список разделов"))
+        self.faculties_list_action.setText(_translate("MainWindow", "Список факультетов"))
         self.faculty_creation.setText(_translate("MainWindow", "Создание факультета"))
         #self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
@@ -279,6 +296,17 @@ class FacultyEditWindow(QMainWindow):
         self.sbornic_screen.move(self.pos())
         self.sbornic_screen.resize(self.size())
         self.sbornic_screen.show()
+        self.close()
+
+
+    def open_contacts(self):
+        if (self.fac_id is None) or (self.fac_name is None):
+            print("return")
+            return
+        self.contacts_window = contacts_screen.ContactsWindow(self.fac_id, self.fac_name)
+        self.contacts_window.move(self.pos())
+        self.contacts_window.resize(self.size())
+        self.contacts_window.show()
         self.close()
 
     
@@ -412,7 +440,7 @@ class FacultyEditWindow(QMainWindow):
                 if (r.status_code == 200):
                     self.status.showMessage("Изменения отправлены!")
                     #print(r.json())
-                    self.sect_id = r.json()['id']
+                    self.fac_id = r.json()['id']
                     self.name = r.json()['name']
                 else:
                     print(r.status_code)

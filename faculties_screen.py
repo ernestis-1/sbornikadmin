@@ -91,6 +91,7 @@ class FacultiesWindow(QMainWindow):
         QMainWindow.__init__(self)
         self.resize(800, 600)
         self.api = FacultiesApi(global_constants.FACULTIES_API)
+        self.faculties_inited = False
         self.init_ui()
         self.init_menu()
 
@@ -155,7 +156,8 @@ class FacultiesWindow(QMainWindow):
 
     def showEvent(self, event):
         #print("show event")
-        asyncio.ensure_future(self.init_faculties())
+        if not self.faculties_inited:
+            asyncio.ensure_future(self.init_faculties())
 
 
     async def init_faculties(self):
@@ -178,6 +180,7 @@ class FacultiesWindow(QMainWindow):
             self.layout.addWidget(faculty)
 
         self.layout.addStretch()
+        self.faculties_inited = True
 
 
     def add_faculty_clicked(self):

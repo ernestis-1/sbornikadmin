@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 from quamash import QEventLoop
 from sections_api import SectionInfo, SectionsApi
+from faculty_api import GatherImages
 from global_constants import SECTIONS_API
 from preloader import Preloader
 #from section_edit import SectionEditWindow
@@ -72,6 +73,7 @@ class SectionsWindow(QMainWindow, QWidget):
         super(SectionsWindow, self).__init__()
         self.resize(800, 600)
         self.api = SectionsApi(SECTIONS_API)
+        self.sections_inited = False
         self.init_ui()
         self.init_menu()
         self.forbidden_filename=""
@@ -84,7 +86,8 @@ class SectionsWindow(QMainWindow, QWidget):
 
     def showEvent(self, event):
         #print("show event")
-        asyncio.ensure_future(self.init_sections())
+        if not self.sections_inited:
+            asyncio.ensure_future(self.init_sections())
 
     def closeEvent(self, event):
         #print("close!")
@@ -105,19 +108,27 @@ class SectionsWindow(QMainWindow, QWidget):
         #print("init sections")
         self.sections = await self.api.get_sections()
 
+        urls = []
+        for sect in self.sections:
+            urls.append(sect.img_url)
+
         sections = []
+        loop = asyncio.get_event_loop()
+        gather = GatherImages(loop)
         async with aiohttp.ClientSession() as session:
-            for section_info in self.sections:
-                image_path = await section_info.get_image_path(session)
-                if (image_path):
-                    section = Section(section_name=section_info.name, sect_id=section_info.sect_id, img_path=image_path, sectionsWindow=self)
-                    sections.append(section)
+            images = await gather.get_images(session, urls)
+        for i in range(0, len(self.sections)):
+            image_path = images[i]
+            section_info = self.sections[i]
+            if (image_path):
+                section = Section(section_name=section_info.name, sect_id=section_info.sect_id, img_path=image_path, sectionsWindow=self)
+                sections.append(section)
                     #self.layout.addWidget(section)
-                else:
-                    section = Section(section_name=section_info.name, sect_id=section_info.sect_id, sectionsWindow=self)
-                    #section.clicked.connect(lambda: section.edit_clicked(self))
-                    sections.append(section)
-                    #self.layout.addWidget(section)
+            else:
+                section = Section(section_name=section_info.name, sect_id=section_info.sect_id, sectionsWindow=self)
+                #section.clicked.connect(lambda: section.edit_clicked(self))
+                sections.append(section)
+                #self.layout.addWidget(section)
         
         self.preloader.stop_loader_animation()
         self.layout.removeWidget(self.preloader)
@@ -128,6 +139,7 @@ class SectionsWindow(QMainWindow, QWidget):
             self.layout.addWidget(section)
 
         self.layout.addStretch()
+        self.sections_inited = True
 
 
     def add_section_clicked(self):

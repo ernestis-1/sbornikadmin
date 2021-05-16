@@ -72,7 +72,7 @@ class SectionEditWindow(QMainWindow):
         font_head = QFont()
         font_head.setPointSize(12)
 
-        self.label_head = QLabel("Введите название раздела:")
+        self.label_head = QLabel("Название раздела:")
         self.label_head.setFont(font_head)
 
         self.button_create = QPushButton('Создать раздел')
@@ -155,7 +155,7 @@ class SectionEditWindow(QMainWindow):
 
 
     def showEvent(self, event):
-        if self.sect_id:
+        if self.sect_id and self.loading:
             self.loading = True
             asyncio.ensure_future(self.init_articles())
 
@@ -185,7 +185,7 @@ class SectionEditWindow(QMainWindow):
 
         self.head_article_list_label = QLabel()
         self.head_article_list_label.setFont(font)
-        self.head_article_list_label.setText("Список статей")
+        self.head_article_list_label.setText("Статьи")
         #self.head_label.setMinimumHeight(50)
         #self.head_label.setMinimumWidth(100)
         #self.head_label.setMaximumWidth(300)
@@ -207,8 +207,8 @@ class SectionEditWindow(QMainWindow):
         self.main_scroll_widget = QGroupBox()
         self.main_scroll_widget.setLayout(self.article_area_layout)
 
-        #self.title_layout.insertWidget(self.title_layout.count()-1, self.main_scroll_widget)
-        self.title_layout.addWidget(self.main_scroll_widget)
+        self.title_layout.insertWidget(self.title_layout.count()-1, self.main_scroll_widget)
+        #self.title_layout.addWidget(self.main_scroll_widget)
         #self.title_layout.insertStretch(self.title_layout.count()-1,10)
         #self.title_layout.insertLayout(self.title_layout.count()-1, self.article_area_layout)
 
