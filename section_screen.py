@@ -278,7 +278,7 @@ class SectionsWindow(QMainWindow, QWidget):
         self.menu_modes.addAction(self.faculty_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
-        self.menubar.addAction(self.menu_screens.menuAction())
+        #self.menubar.addAction(self.menu_screens.menuAction())
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -286,7 +286,7 @@ class SectionsWindow(QMainWindow, QWidget):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("MainWindow", "Редактирование раздела"))
+        self.setWindowTitle(_translate("MainWindow", "ИСП admin"))
         self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
         #self.sections_list_action.setText(_translate("MainWindow", "Список разделов"))

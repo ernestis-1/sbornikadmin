@@ -34,7 +34,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
     def __init__(self, article_id=None, parent_id=9, article_name=None, sect_name=None, sect_img_path=None, sect_img_url=None):
         super(EditorWindow, self).__init__()
         self.resize(800,600)
-
+        self.setWindowTitle("ИСП admin")
         self.is_keep_path = False
        #виджет отображает область редактирования
         self.api = ArticleApi(global_constants.ARTICLE_API)
@@ -376,7 +376,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.menu_modes.addAction(self.faculty_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
-        self.menubar.addAction(self.menu_screens.menuAction())
+        #self.menubar.addAction(self.menu_screens.menuAction())
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -384,7 +384,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("MainWindow", "Редактирование статьи"))
+        self.setWindowTitle(_translate("MainWindow", "ИСП admin"))
         self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
         self.sections_list_action.setText(_translate("MainWindow", "Список разделов"))
@@ -631,7 +631,7 @@ def get_photo_uri(path_img):
             #print(r.status_code)
             #print(r.text)
             json_response = r.json()
-            print(json_response)
+            #print(json_response)
             url_data = json_response['data']
             #print(f'Нужный url: {url_data["url"]}')
             return url_data["url"]

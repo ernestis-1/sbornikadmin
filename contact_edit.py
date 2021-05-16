@@ -470,7 +470,7 @@ class ContactEditorWindow(QMainWindow):
         self.menu_modes.addAction(self.faculty_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
-        self.menubar.addAction(self.menu_screens.menuAction())
+        #self.menubar.addAction(self.menu_screens.menuAction())
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -478,7 +478,7 @@ class ContactEditorWindow(QMainWindow):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("MainWindow", "Редактор контакта"))
+        self.setWindowTitle(_translate("MainWindow", "ИСП admin"))
         self.label_name.setText(_translate("MainWindow", "Имя контакта:"))
         self.label_phone_number.setText(_translate("MainWindow", "Телефон контакта:"))
         self.label_position.setText(_translate("MainWindow", "Должность контакта:"))

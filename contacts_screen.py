@@ -347,7 +347,7 @@ class ContactsWindow(QMainWindow):
         self.menu_modes.addAction(self.faculty_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
-        self.menubar.addAction(self.menu_screens.menuAction())
+        #self.menubar.addAction(self.menu_screens.menuAction())
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -355,7 +355,7 @@ class ContactsWindow(QMainWindow):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("ScrollArea", "Факультеты"))
+        self.setWindowTitle(_translate("ScrollArea", "ИСП admin"))
         #self.setWindowTitle(_translate("MainWindow", "Редактирование раздела"))
         self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
