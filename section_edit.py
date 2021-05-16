@@ -34,6 +34,7 @@ class Article(QPushButton):
     def edit_article_clicked(self):
         print(self.article_id)
         if (self.sectionEditWindow):
+            self.setEnabled(False)
             self.sectionEditWindow.edit_article_triggered(self.article_id, self.article_title)
 
 
@@ -51,6 +52,7 @@ class SectionEditWindow(QMainWindow):
         
         self.api = SectionsApi(global_constants.SECTIONS_API)
         
+        self.is_keep_path = False
         self.resize(800, 600)
         self.init_ui()
         self.init_menu()
@@ -139,8 +141,27 @@ class SectionEditWindow(QMainWindow):
 
         
         #self.button_create.clicked.connect(self._on_save_as_image)
-        
+        navigation_font = QFont()
+        navigation_font.setPointSize(12)
+
+        navigation_layout = QHBoxLayout()
+        self.button_back = QPushButton()
+        self.button_back.setText("<")
+        self.button_back.setMaximumWidth(30)
+        self.button_back.setFont(navigation_font)
+        self.button_back.clicked.connect(self.sections_list_action_triggered)
+
+        navigation_label = QLabel()
+        navigation_label.setText("Сборник/Редактирование раздела")
+        navigation_label.setFont(navigation_font)
+
+        navigation_layout.addWidget(self.button_back)
+        navigation_layout.addWidget(navigation_label)
+        navigation_layout.setAlignment(Qt.AlignTop)
+
+        main_layout.addLayout(navigation_layout)
         main_layout.addLayout(horizontal_layout)
+        main_layout.setAlignment(Qt.AlignTop)
         #main_layout.addWidget(self.controlWidget)
         #main_layout.addWidget(self.button_create)
         #main_layout.addStretch()
@@ -329,6 +350,8 @@ class SectionEditWindow(QMainWindow):
 
 
     def closeEvent(self, event):
+        if self.is_keep_path:
+            return
         import os, shutil
         folder = 'tempfiles/'
         for filename in os.listdir(folder):
@@ -352,6 +375,7 @@ class SectionEditWindow(QMainWindow):
         self.label_image.setPixmap(pixmap)
 
     def sections_list_action_triggered(self):
+        self.button_back.setEnabled(False)
         self.sections_window = section_screen.SectionsWindow()
         self.sections_window.move(self.pos())
         self.sections_window.resize(self.size())
@@ -360,11 +384,14 @@ class SectionEditWindow(QMainWindow):
         #self.destroy()
 
     def edit_article_triggered(self, article_id=None, article_name=None):
-        print("triggered!")
+        #print("triggered!")
         if (self.loading):
             return
-        print(article_id is None)
-        self.article_window = redakt4.EditorWindow(article_id=article_id, parent_id=self.sect_id, article_name=article_name)
+        #print(article_id is None)
+        self.add_article_button.setEnabled(False)
+        self.is_keep_path = True
+        self.article_window = redakt4.EditorWindow(article_id=article_id, parent_id=self.sect_id, article_name=article_name,
+                                sect_name=self.name, sect_img_path=self.image_file_name, sect_img_url=self.img_url)
         self.article_window.move(self.pos())
         self.article_window.resize(self.size())
         self.article_window.show()

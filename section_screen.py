@@ -62,6 +62,7 @@ class Section(QPushButton):
 
     def edit_clicked(self):
         self.sectionsWindow.forbidDeletion(self.img_path)
+        self.setEnabled(False)
         #print("edit clicked")
         self.sectionsWindow.switch_to_edit_section(self.sect_id, self.section_name, self.img_path)
 
@@ -144,6 +145,7 @@ class SectionsWindow(QMainWindow, QWidget):
 
     def add_section_clicked(self):
         #print("clicked!")
+        self.add_section_button.setEnabled(False)
         self.section_edit_window = section_edit.SectionEditWindow()
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())

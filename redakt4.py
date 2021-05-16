@@ -31,8 +31,11 @@ from preloader import Preloader
 
 class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
-    def __init__(self, article_id=None, parent_id=9, article_name=None, *args, **kwargs):
-        super(EditorWindow, self).__init__(*args, **kwargs)
+    def __init__(self, article_id=None, parent_id=9, article_name=None, sect_name=None, sect_img_path=None, sect_img_url=None):
+        super(EditorWindow, self).__init__()
+        self.resize(800,600)
+
+        self.is_keep_path = False
        #виджет отображает область редактирования
         self.api = ArticleApi(global_constants.ARTICLE_API)
         self.article_id = article_id
@@ -40,6 +43,12 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.article_name = article_name
         self.photo_urls_list = None
         self.article_text = None
+
+        #parent info
+        self.sect_id = parent_id
+        self.sect_name = sect_name
+        self.sect_img_path = sect_img_path
+        self.sect_img_url = sect_img_url
 
         self.new_photoes = []
         #self.photo_filenames_list = []
@@ -54,7 +63,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
 
     def init_preloader(self):
-        self.resize(800,600)
+        #self.resize(800,600)
         self.preloader = Preloader()
         self.setCentralWidget(self.preloader)
 
@@ -71,12 +80,32 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
 
     def init_ui(self):
-        self.resize(800,600)
 
         self.button_font = QFont()
         self.button_font.setPointSize(10)
 
         layout = QVBoxLayout()
+
+        navigation_font = QFont()
+        navigation_font.setPointSize(12)
+        
+        navigation_layout = QHBoxLayout()
+        self.button_back = QPushButton()
+        self.button_back.setText("<")
+        self.button_back.setMaximumWidth(30)
+        self.button_back.setFont(navigation_font)
+        self.button_back.clicked.connect(self.back_to_section_edit)
+
+        navigation_label = QLabel()
+        navigation_label.setText("Сборник/Редактирование раздела/Редактирование статьи")
+        navigation_label.setFont(navigation_font)
+
+        navigation_layout.addWidget(self.button_back)
+        navigation_layout.addWidget(navigation_label)
+        navigation_layout.setAlignment(Qt.AlignTop)
+
+        layout.addLayout(navigation_layout)
+
 
         self.head_layout = QHBoxLayout()
         
@@ -123,7 +152,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         
         #file_menu = self.menuBar().addMenu("&File")
 
-        self.razdel = QPushButton('Переход в создание раздела')
+        #self.razdel = QPushButton('Переход в создание раздела')
         #self.razdel.clicked.connect(self.buttonClicked)
 
         image_buttons_layout = QHBoxLayout()
@@ -158,7 +187,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.scrollLayout.addStretch()
         #self.label_image = QLabel("<Здесь будут отображаться фотографии, которые Вы выбрали>")
        
-        layout.addWidget(self.razdel)
+        #layout.addWidget(self.razdel)
         #layout.addWidget(self.button_open)
         layout.addLayout(image_buttons_layout)
         layout.addWidget(self.scroller)
@@ -283,6 +312,18 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.close()
         #self.destroy()
 
+
+    def back_to_section_edit(self):
+        #print("clicked!")
+        self.is_keep_path = True
+        self.section_edit_window = section_edit.SectionEditWindow(self.sect_id, self.sect_name, self.sect_img_path, self.sect_img_url)
+        self.button_back.setEnabled(False)
+        self.section_edit_window.move(self.pos())
+        self.section_edit_window.resize(self.size())
+        self.section_edit_window.show()
+        self.close()
+        #self.destroy()
+
     
     def switch_to_faculty(self):
         self.faculties_window = faculties_screen.FacultiesWindow()
@@ -366,6 +407,8 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
 
     def closeEvent(self, event):
+        if self.is_keep_path:
+            return
         import os, shutil
         folder = 'tempfiles/'
         for filename in os.listdir(folder):
@@ -568,7 +611,9 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
             r = requests.delete(global_constants.ARTICLE_API+f"/{self.article_id}")
             if (r.status_code == 200):
                 self.status.showMessage("Статья удалена!")
-                self.sections_list_action_triggered()
+                #self.sections_list_action_triggered()
+                #self.is_keep_path = True
+                self.back_to_section_edit()
             else:
                 self.status.showMessage("Ошибка при удалении!")
                 print(r.status_code)
