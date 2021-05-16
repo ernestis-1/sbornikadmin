@@ -196,7 +196,27 @@ class FacultyEditWindow(QMainWindow):
         self.title_layout.addWidget(self.button_send)
         
 
+        navigation_font = QFont()
+        navigation_font.setPointSize(12)
 
+        navigation_layout = QHBoxLayout()
+        self.button_back = QPushButton()
+        self.button_back.setText("<")
+        self.button_back.setMaximumWidth(30)
+        self.button_back.setFont(navigation_font)
+        self.button_back.clicked.connect(self.faculties_list_action_triggered)
+
+        navigation_label = QLabel()
+        navigation_label.setText("Факультеты/Редактирование факультета")
+        navigation_label.setFont(navigation_font)
+
+        navigation_layout.addWidget(self.button_back)
+        navigation_layout.addWidget(navigation_label)
+        navigation_layout.setAlignment(Qt.AlignTop)
+
+
+        main_layout.setAlignment(Qt.AlignTop)
+        main_layout.addLayout(navigation_layout)
         main_layout.addLayout(horizontal_layout)
         #main_layout.addWidget(self.editor)
         #main_layout.addStretch()       
@@ -285,6 +305,7 @@ class FacultyEditWindow(QMainWindow):
 
     def faculties_list_action_triggered(self):
         self.faculties_window = faculties_screen.FacultiesWindow()
+        self.button_back.setEnabled(False)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
         self.faculties_window.show()
@@ -303,7 +324,8 @@ class FacultyEditWindow(QMainWindow):
         if (self.fac_id is None) or (self.fac_name is None):
             print("return")
             return
-        self.contacts_window = contacts_screen.ContactsWindow(self.fac_id, self.fac_name)
+        self.buttonContacts.setEnabled(False)
+        self.contacts_window = contacts_screen.ContactsWindow(self.fac_id, self.fac_name, self.fac_info, self.img_url)
         self.contacts_window.move(self.pos())
         self.contacts_window.resize(self.size())
         self.contacts_window.show()

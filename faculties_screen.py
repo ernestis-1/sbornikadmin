@@ -81,6 +81,7 @@ class Faculty(QPushButton):
     
     def edit_clicked(self):
         #print("edit clicked")
+        self.setEnabled(False)
         self.facultiesWindow.switch_to_edit_faculty(self.fac_id, self.fac_name, self.info, self.img_url)
         
 
@@ -186,6 +187,7 @@ class FacultiesWindow(QMainWindow):
     def add_faculty_clicked(self):
         #print("clicked!")
         self.faculty_edit_window = faculty_edit.FacultyEditWindow()
+        self.add_section_button.setEnabled(False)
         self.faculty_edit_window.move(self.pos())
         self.faculty_edit_window.resize(self.size())
         self.faculty_edit_window.show()

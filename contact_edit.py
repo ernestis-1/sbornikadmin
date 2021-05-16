@@ -43,12 +43,15 @@ class ContactEditorWindow(QMainWindow):
         self.resize(800, 450)
 
     def init_ui(self):
+        main_main_layout = QVBoxLayout()
+
         main_layout = QHBoxLayout()
         self.setObjectName("MainWindow")
         
         self.main_widget = QtWidgets.QWidget()
         self.main_widget.setObjectName("centralwidget")
-        self.main_widget.setLayout(main_layout)
+        #self.main_widget.setLayout(main_layout)
+        self.main_widget.setLayout(main_main_layout)
         self.setCentralWidget(self.main_widget)
 
         self.labels_layout = QVBoxLayout()
@@ -203,15 +206,39 @@ class ContactEditorWindow(QMainWindow):
 
         main_layout.addLayout(self.attachment_layout)
         main_layout.addLayout(self.labels_layout)
+
+        navigation_font = QFont()
+        navigation_font.setPointSize(12)
+
+        navigation_layout = QHBoxLayout()
+        self.button_back = QPushButton()
+        self.button_back.setText("<")
+        self.button_back.setMaximumWidth(30)
+        self.button_back.setFont(navigation_font)
+        #self.button_back.clicked.connect(self.faculties_list_action_triggered)
+        self.button_back.clicked.connect(self.back_to_contacts)
+
+        navigation_label = QLabel()
+        navigation_label.setText("Факультеты/Редактирование факультета/Редактирование контакта")
+        navigation_label.setFont(navigation_font)
+
+        navigation_layout.addWidget(self.button_back)
+        navigation_layout.addWidget(navigation_label)
+        navigation_layout.setAlignment(Qt.AlignTop)
+
+        
+        main_main_layout.setAlignment(Qt.AlignTop)
+        main_main_layout.addLayout(navigation_layout)
+        main_main_layout.addLayout(main_layout)
         
 
-        self.menubar = QtWidgets.QMenuBar(self)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
-        self.menubar.setObjectName("menubar")
-        self.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(self)
-        self.statusbar.setObjectName("statusbar")
-        self.setStatusBar(self.statusbar)
+        #self.menubar = QtWidgets.QMenuBar(self)
+        #self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
+        #self.menubar.setObjectName("menubar")
+        #self.setMenuBar(self.menubar)
+        #self.statusbar = QtWidgets.QStatusBar(self)
+        #self.statusbar.setObjectName("statusbar")
+        #self.setStatusBar(self.statusbar)
 
         #self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -280,6 +307,7 @@ class ContactEditorWindow(QMainWindow):
     def back_to_contacts(self):
         if self.fac_id is None:
             return
+        self.button_back.setEnabled(False)
         self.contacts_window = contacts_screen.ContactsWindow(fac_id=self.fac_id)
         self.contacts_window.move(self.pos())
         self.contacts_window.resize(self.size())
@@ -356,8 +384,9 @@ class ContactEditorWindow(QMainWindow):
                 else:
                     print(r.status_code)
             except Exception as e:
+                #import traceback
                 self.status.showMessage("Ошибка!")
-                print(e)
+                #print(traceback.format_exc())
             #self.status.showMessage("Раздел создан!")
         else:
             j = {

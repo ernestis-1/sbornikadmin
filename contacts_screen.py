@@ -80,17 +80,20 @@ class Contact(QPushButton):
 
     def edit_clicked(self):
         if self.contacts_window:
+            self.setEnabled(False)
             self.contacts_window.forbidDeletion(self.photo_path)
             self.contacts_window.open_contact_edit(self.contact_id, self.contact_name, self.contact_position, self.contact_number,
                 self.photo_path, self.photo_url, self.contact_links)
 
 
 class ContactsWindow(QMainWindow):
-    def __init__(self, fac_id=None, fac_name=None):
+    def __init__(self, fac_id=None, fac_name=None, fac_info=None, fac_img_url=None):
         QMainWindow.__init__(self)
         self.resize(800,600)
         self.fac_id = fac_id
         self.fac_name = fac_name
+        self.fac_info = fac_info
+        self.fac_img_url = fac_img_url
         self.contacts_inited = False
         self.api = FacultiesApi(global_constants.FACULTIES_API, global_constants.FACULTIES_INFO_API, global_constants.FACULTIES_INFO_ID)
         self.setWindowTitle("Контакты")
@@ -209,11 +212,33 @@ class ContactsWindow(QMainWindow):
         head_layout.addWidget(self.add_section_button)
 
 
+        navigation_font = QFont()
+        navigation_font.setPointSize(12)
+
+        navigation_layout = QHBoxLayout()
+        self.button_back = QPushButton()
+        self.button_back.setText("<")
+        self.button_back.setMaximumWidth(30)
+        self.button_back.setFont(navigation_font)
+        self.button_back.clicked.connect(self.back_to_faculty_edit)
+
+        navigation_label = QLabel()
+        navigation_label.setText("Факультеты/Редактирование факультета/Контакты")
+        navigation_label.setFont(navigation_font)
+
+        navigation_layout.addWidget(self.button_back)
+        navigation_layout.addWidget(navigation_label)
+        navigation_layout.setAlignment(Qt.AlignTop)
+
+
+
         main_layout = QVBoxLayout()
+        main_layout.addLayout(navigation_layout)
         main_layout.addLayout(head_layout)
         #main_layout.addWidget(self.head_label)
         #main_layout.addWidget(self.head_widget)
         main_layout.addWidget(self.scroller)
+        main_layout.setAlignment(Qt.AlignTop)
         
         #main_layout.addStretch()
         self.main_widget = QWidget()
@@ -230,6 +255,11 @@ class ContactsWindow(QMainWindow):
         self.faculty_edit_window.show()
         self.close()
         #self.destroy()
+
+
+    def back_to_faculty_edit(self):
+        self.button_back.setEnabled(False)
+        self.switch_to_edit_faculty(self.fac_id, self.fac_name, self.fac_info, self.fac_img_url)
 
 
     def switch_to_edit_faculty(self, fact_id, fac_name, fac_info, img_url):

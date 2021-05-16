@@ -631,6 +631,7 @@ def get_photo_uri(path_img):
             #print(r.status_code)
             #print(r.text)
             json_response = r.json()
+            print(json_response)
             url_data = json_response['data']
             #print(f'Нужный url: {url_data["url"]}')
             return url_data["url"]
