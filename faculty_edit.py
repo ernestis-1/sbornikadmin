@@ -40,7 +40,7 @@ class FacultyEditWindow(QMainWindow):
         self.fac_info = fac_info
         self.img_url = img_url
         self.img_path = None
-        if img_url is None:
+        if (img_url is None) or (img_url==""):
             self.init_ui()
             self.init_menu()
             self.init_toolbar()
