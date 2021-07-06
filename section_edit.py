@@ -34,6 +34,7 @@ class Article(QPushButton):
     def edit_article_clicked(self):
         print(self.article_id)
         if (self.sectionEditWindow):
+            self.setEnabled(False)
             self.sectionEditWindow.edit_article_triggered(self.article_id, self.article_title)
 
 
@@ -51,6 +52,7 @@ class SectionEditWindow(QMainWindow):
         
         self.api = SectionsApi(global_constants.SECTIONS_API)
         
+        self.is_keep_path = False
         self.resize(800, 600)
         self.init_ui()
         self.init_menu()
@@ -72,7 +74,7 @@ class SectionEditWindow(QMainWindow):
         font_head = QFont()
         font_head.setPointSize(12)
 
-        self.label_head = QLabel("Введите название раздела:")
+        self.label_head = QLabel("Название раздела:")
         self.label_head.setFont(font_head)
 
         self.button_create = QPushButton('Создать раздел')
@@ -139,8 +141,27 @@ class SectionEditWindow(QMainWindow):
 
         
         #self.button_create.clicked.connect(self._on_save_as_image)
-        
+        navigation_font = QFont()
+        navigation_font.setPointSize(12)
+
+        navigation_layout = QHBoxLayout()
+        self.button_back = QPushButton()
+        self.button_back.setText("<")
+        self.button_back.setMaximumWidth(30)
+        self.button_back.setFont(navigation_font)
+        self.button_back.clicked.connect(self.sections_list_action_triggered)
+
+        navigation_label = QLabel()
+        navigation_label.setText("Сборник/Редактирование раздела")
+        navigation_label.setFont(navigation_font)
+
+        navigation_layout.addWidget(self.button_back)
+        navigation_layout.addWidget(navigation_label)
+        navigation_layout.setAlignment(Qt.AlignTop)
+
+        main_layout.addLayout(navigation_layout)
         main_layout.addLayout(horizontal_layout)
+        main_layout.setAlignment(Qt.AlignTop)
         #main_layout.addWidget(self.controlWidget)
         #main_layout.addWidget(self.button_create)
         #main_layout.addStretch()
@@ -155,7 +176,7 @@ class SectionEditWindow(QMainWindow):
 
 
     def showEvent(self, event):
-        if self.sect_id:
+        if self.sect_id and self.loading:
             self.loading = True
             asyncio.ensure_future(self.init_articles())
 
@@ -185,7 +206,7 @@ class SectionEditWindow(QMainWindow):
 
         self.head_article_list_label = QLabel()
         self.head_article_list_label.setFont(font)
-        self.head_article_list_label.setText("Список статей")
+        self.head_article_list_label.setText("Статьи")
         #self.head_label.setMinimumHeight(50)
         #self.head_label.setMinimumWidth(100)
         #self.head_label.setMaximumWidth(300)
@@ -207,8 +228,8 @@ class SectionEditWindow(QMainWindow):
         self.main_scroll_widget = QGroupBox()
         self.main_scroll_widget.setLayout(self.article_area_layout)
 
-        #self.title_layout.insertWidget(self.title_layout.count()-1, self.main_scroll_widget)
-        self.title_layout.addWidget(self.main_scroll_widget)
+        self.title_layout.insertWidget(self.title_layout.count()-1, self.main_scroll_widget)
+        #self.title_layout.addWidget(self.main_scroll_widget)
         #self.title_layout.insertStretch(self.title_layout.count()-1,10)
         #self.title_layout.insertLayout(self.title_layout.count()-1, self.article_area_layout)
 
@@ -280,7 +301,7 @@ class SectionEditWindow(QMainWindow):
         self.menu_modes.addAction(self.faculty_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
-        self.menubar.addAction(self.menu_screens.menuAction())
+        #self.menubar.addAction(self.menu_screens.menuAction())
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -288,7 +309,7 @@ class SectionEditWindow(QMainWindow):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("MainWindow", "Редактирование раздела"))
+        self.setWindowTitle(_translate("MainWindow", "ИСП admin"))
         self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
         self.sections_list_action.setText(_translate("MainWindow", "Список разделов"))
@@ -329,6 +350,8 @@ class SectionEditWindow(QMainWindow):
 
 
     def closeEvent(self, event):
+        if self.is_keep_path:
+            return
         import os, shutil
         folder = 'tempfiles/'
         for filename in os.listdir(folder):
@@ -352,6 +375,7 @@ class SectionEditWindow(QMainWindow):
         self.label_image.setPixmap(pixmap)
 
     def sections_list_action_triggered(self):
+        self.button_back.setEnabled(False)
         self.sections_window = section_screen.SectionsWindow()
         self.sections_window.move(self.pos())
         self.sections_window.resize(self.size())
@@ -360,11 +384,14 @@ class SectionEditWindow(QMainWindow):
         #self.destroy()
 
     def edit_article_triggered(self, article_id=None, article_name=None):
-        print("triggered!")
+        #print("triggered!")
         if (self.loading):
             return
-        print(article_id is None)
-        self.article_window = redakt4.EditorWindow(article_id=article_id, parent_id=self.sect_id, article_name=article_name)
+        #print(article_id is None)
+        self.add_article_button.setEnabled(False)
+        self.is_keep_path = True
+        self.article_window = redakt4.EditorWindow(article_id=article_id, parent_id=self.sect_id, article_name=article_name,
+                                sect_name=self.name, sect_img_path=self.image_file_name, sect_img_url=self.img_url)
         self.article_window.move(self.pos())
         self.article_window.resize(self.size())
         self.article_window.show()

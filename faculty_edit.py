@@ -27,19 +27,20 @@ from sections_api import get_image_path_from_url
 import global_constants
 import section_screen, faculties_screen
 import redakt4
-import faculties_screen
+import contacts_screen
 
 
 class FacultyEditWindow(QMainWindow):
     def __init__(self, fac_id=None, fac_name=None, fac_info=None, img_url=None):
         super().__init__()
         self.resize(800, 600)
+        self.setWindowTitle("ИСП admin")
         self.fac_id = fac_id
         self.fac_name = fac_name
         self.fac_info = fac_info
         self.img_url = img_url
         self.img_path = None
-        if img_url is None:
+        if (img_url is None) or (img_url==""):
             self.init_ui()
             self.init_menu()
             self.init_toolbar()
@@ -72,6 +73,20 @@ class FacultyEditWindow(QMainWindow):
             asyncio.ensure_future(self.init_content())
 
         
+    def closeEvent(self, event):
+        import os, shutil
+        folder = 'tempfiles/'
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+        
     def init_ui(self):
         self.main_widget = QWidget()
         main_layout = QVBoxLayout()
@@ -92,6 +107,7 @@ class FacultyEditWindow(QMainWindow):
             self.line_input_head.setText(self.fac_name)
 
 
+
         #send_font = QFont()
         #send_font.setPointSize(15)
         self.button_send = QPushButton('Создать факультет')
@@ -105,10 +121,15 @@ class FacultyEditWindow(QMainWindow):
         #self.title_layout.addStretch()
         self.title_layout.addWidget(self.label_head)
         self.title_layout.addWidget(self.line_input_head)
-        self.title_layout.addWidget(self.button_send)
+        #self.title_layout.addWidget(self.button_send)
         self.title_layout.setAlignment(Qt.AlignTop)
         #self.title_layout.addStretch()
 
+        self.buttonContacts = QPushButton("Перейти к контактам")
+        self.buttonContacts.setFont(head_font)
+        self.buttonContacts.clicked.connect(self.open_contacts)
+
+        self.title_layout.addWidget(self.buttonContacts)
 
 
         self.label_image = QLabel()
@@ -173,13 +194,30 @@ class FacultyEditWindow(QMainWindow):
 
         self.title_layout.addLayout(editor_head_layout)
         self.title_layout.addWidget(self.editor)
+        self.title_layout.addWidget(self.button_send)
+        
 
-        self.buttonContacts = QPushButton("Перейти к контактам")
-        self.buttonContacts.setFont(head_font)
+        navigation_font = QFont()
+        navigation_font.setPointSize(12)
 
-        self.title_layout.addWidget(self.buttonContacts)
+        navigation_layout = QHBoxLayout()
+        self.button_back = QPushButton()
+        self.button_back.setText("<")
+        self.button_back.setMaximumWidth(30)
+        self.button_back.setFont(navigation_font)
+        self.button_back.clicked.connect(self.faculties_list_action_triggered)
+
+        navigation_label = QLabel()
+        navigation_label.setText("Факультеты/Редактирование факультета")
+        navigation_label.setFont(navigation_font)
+
+        navigation_layout.addWidget(self.button_back)
+        navigation_layout.addWidget(navigation_label)
+        navigation_layout.setAlignment(Qt.AlignTop)
 
 
+        main_layout.setAlignment(Qt.AlignTop)
+        main_layout.addLayout(navigation_layout)
         main_layout.addLayout(horizontal_layout)
         #main_layout.addWidget(self.editor)
         #main_layout.addStretch()       
@@ -247,7 +285,7 @@ class FacultyEditWindow(QMainWindow):
         self.menu_modes.addAction(self.faculty_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
-        self.menubar.addAction(self.menu_screens.menuAction())
+        #self.menubar.addAction(self.menu_screens.menuAction())
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -255,11 +293,11 @@ class FacultyEditWindow(QMainWindow):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("ScrollArea", "Факультеты"))
+        self.setWindowTitle(_translate("ScrollArea", "ИСП admin"))
         #self.setWindowTitle(_translate("MainWindow", "Редактирование раздела"))
         self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
-        self.faculties_list_action.setText(_translate("MainWindow", "Список разделов"))
+        self.faculties_list_action.setText(_translate("MainWindow", "Список факультетов"))
         self.faculty_creation.setText(_translate("MainWindow", "Создание факультета"))
         #self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
@@ -268,6 +306,7 @@ class FacultyEditWindow(QMainWindow):
 
     def faculties_list_action_triggered(self):
         self.faculties_window = faculties_screen.FacultiesWindow()
+        self.button_back.setEnabled(False)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
         self.faculties_window.show()
@@ -279,6 +318,18 @@ class FacultyEditWindow(QMainWindow):
         self.sbornic_screen.move(self.pos())
         self.sbornic_screen.resize(self.size())
         self.sbornic_screen.show()
+        self.close()
+
+
+    def open_contacts(self):
+        if (self.fac_id is None) or (self.fac_name is None):
+            print("return")
+            return
+        self.buttonContacts.setEnabled(False)
+        self.contacts_window = contacts_screen.ContactsWindow(self.fac_id, self.fac_name, self.fac_info, self.img_url)
+        self.contacts_window.move(self.pos())
+        self.contacts_window.resize(self.size())
+        self.contacts_window.show()
         self.close()
 
     
@@ -412,7 +463,7 @@ class FacultyEditWindow(QMainWindow):
                 if (r.status_code == 200):
                     self.status.showMessage("Изменения отправлены!")
                     #print(r.json())
-                    self.sect_id = r.json()['id']
+                    self.fac_id = r.json()['id']
                     self.name = r.json()['name']
                 else:
                     print(r.status_code)
