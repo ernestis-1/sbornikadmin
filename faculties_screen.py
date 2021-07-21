@@ -128,7 +128,7 @@ class FacultiesWindow(QMainWindow):
 
         self.head_label = QLabel()
         self.head_label.setFont(font)
-        self.head_label.setText("Факультеты")
+        self.head_label.setText("Структурные подразделения")
         #self.head_label.setMinimumHeight(50)
         #self.head_label.setMinimumWidth(100)
         #self.head_label.setMaximumWidth(300)
