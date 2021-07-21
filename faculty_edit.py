@@ -94,14 +94,14 @@ class FacultyEditWindow(QMainWindow):
         self.title_layout = QVBoxLayout()
 
         head_font = QFont()
-        head_font.setPointSize(14)
+        head_font.setPointSize(12)
 
-        self.label_head = QLabel("Введите название факультета:")
+        self.label_head = QLabel("Введите название СП:")
         self.label_head.setFont(head_font)
 
         self.line_input_head = QLineEdit()#QPlainTextEdit
         fixedfontnazv = QFont()#QFontDatabase.systemFont(QFontDatabase.TitleFont)
-        fixedfontnazv.setPointSize(18)
+        fixedfontnazv.setPointSize(14)
         self.line_input_head.setFont(fixedfontnazv)
         if (self.fac_name):
             self.line_input_head.setText(self.fac_name)
@@ -110,7 +110,7 @@ class FacultyEditWindow(QMainWindow):
 
         #send_font = QFont()
         #send_font.setPointSize(15)
-        self.button_send = QPushButton('Создать факультет')
+        self.button_send = QPushButton('Создать СП')
         if self.fac_id:
             self.button_send.setText('Отправить изменения')
         self.button_send.setFont(head_font)
@@ -134,17 +134,27 @@ class FacultyEditWindow(QMainWindow):
 
         self.label_image = QLabel()
         self.label_image.setScaledContents(True)
-        label_size = 180
-        self.label_image.setMaximumWidth(label_size)
-        self.label_image.setMaximumHeight(label_size)
-        self.label_image.setMinimumWidth(label_size)
-        self.label_image.setMinimumHeight(label_size)
-        
-        
+        self.label_size = 180
+        self.label_maximum_height = self.label_size + 100
+
         pixmap = QPixmap("images/attach.png")
         if (self.img_path):
             pixmap = QPixmap(self.img_path)
+        pixmap = pixmap.scaled(self.label_size, self.label_maximum_height, Qt.KeepAspectRatio)
+        #pixmap.scaledToHeight(label_size)
         self.label_image.setPixmap(pixmap)
+
+        
+        #self.label_image.setMaximumWidth(label_size)
+        #self.label_image.setMaximumHeight(label_size+50)
+        
+        #self.label_image.setMinimumWidth(label_size)
+        #self.label_image.setMinimumHeight(label_size-50)
+        #self.label_image.saveGeometry()
+        self.label_image.setFixedWidth(self.label_size)
+        
+        
+        
 
         self.button_font = QFont()
         self.button_font.setPointSize(10)
@@ -175,7 +185,7 @@ class FacultyEditWindow(QMainWindow):
         
         editor_title = QLabel("Info")
         editor_title_font = QtGui.QFont()
-        editor_title_font.setPointSize(12)
+        editor_title_font.setPointSize(10)
         editor_title.setFont(editor_title_font)
 
         editor_head_layout.addWidget(editor_title)
@@ -226,7 +236,7 @@ class FacultyEditWindow(QMainWindow):
 
 
     def add_delete_button(self):
-        self.button_delete = QPushButton("Удалить факультет")
+        self.button_delete = QPushButton("Удалить")
         #self.button_delete.setText("Удалить")
         #font = QFont()
         #font.setPointSize(9)

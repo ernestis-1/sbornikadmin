@@ -223,7 +223,7 @@ class ContactsWindow(QMainWindow):
         self.button_back.clicked.connect(self.back_to_faculty_edit)
 
         navigation_label = QLabel()
-        navigation_label.setText("Факультеты/Редактирование факультета/Контакты")
+        navigation_label.setText("Структурные подразделения/Редактирование СП/Контакты")
         navigation_label.setFont(navigation_font)
 
         navigation_layout.addWidget(self.button_back)
@@ -287,7 +287,8 @@ class ContactsWindow(QMainWindow):
     
 
     def add_contact_clicked(self):
-        self.contact_window = contact_edit.ContactEditorWindow(fac_id=self.fac_id)
+        self.contact_window = contact_edit.ContactEditorWindow(fac_id=self.fac_id, fac_name=self.fac_name, 
+                fac_info=self.fac_info, fac_url=self.fac_img_url)
         self.contact_window.move(self.pos())
         self.contact_window.resize(self.size())
         self.contact_window.show()
@@ -296,7 +297,8 @@ class ContactsWindow(QMainWindow):
 
     def open_contact_edit(self, contact_id, contact_name, contact_position, contact_number, photo_path, photo_url, contact_links):
         #print(photo_path)
-        self.contact_window = contact_edit.ContactEditorWindow(self.fac_id, contact_id, contact_name, contact_position, contact_number, 
+        self.contact_window = contact_edit.ContactEditorWindow(self.fac_id, self.fac_name, self.fac_info, self.fac_img_url,
+                contact_id, contact_name, contact_position, contact_number, 
                 photo_path, photo_url, contact_links)
         self.contact_window.move(self.pos())
         self.contact_window.resize(self.size())
