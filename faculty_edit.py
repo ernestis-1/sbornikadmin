@@ -208,7 +208,7 @@ class FacultyEditWindow(QMainWindow):
         self.button_back.clicked.connect(self.faculties_list_action_triggered)
 
         navigation_label = QLabel()
-        navigation_label.setText("Факультеты/Редактирование факультета")
+        navigation_label.setText("Структурные подразделения/Редактирование СП")
         navigation_label.setFont(navigation_font)
 
         navigation_layout.addWidget(self.button_back)
