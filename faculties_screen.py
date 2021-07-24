@@ -32,12 +32,13 @@ import section_screen
 
 
 class Faculty(QPushButton):
-    def __init__(self, fac_id=None, fac_name=None, info=None, img_path="images/building.png", img_url=None, facultiesWindow=None):
+    def __init__(self, faculty_info=None, img_path="images/building.png", facultiesWindow=None):
         QPushButton.__init__(self)
-        self.fac_id = fac_id
-        self.fac_name = fac_name
-        self.info = info
-        self.img_url = img_url
+        self.faculty_info = faculty_info
+        self.fac_id = faculty_info.fac_id
+        self.fac_name = faculty_info.fac_name
+        self.info = faculty_info.info
+        self.img_url = faculty_info.img_url
         self.facultiesWindow = facultiesWindow
         self.init_ui(img_path)
         self.clicked.connect(self.edit_clicked)
@@ -82,7 +83,7 @@ class Faculty(QPushButton):
     def edit_clicked(self):
         #print("edit clicked")
         self.setEnabled(False)
-        self.facultiesWindow.switch_to_edit_faculty(self.fac_id, self.fac_name, self.info, self.img_url)
+        self.facultiesWindow.switch_to_edit_faculty(self.faculty_info)
         
 
 
@@ -168,7 +169,7 @@ class FacultiesWindow(QMainWindow):
         faculties = []
         async with aiohttp.ClientSession() as session:
             for fac in self.faculties:
-                faculty = Faculty(fac_id=fac.fac_id, fac_name=fac.fac_name, info=fac.info, img_url=fac.img_url, facultiesWindow=self)
+                faculty = Faculty(faculty_info=fac, facultiesWindow=self)
                 faculties.append(faculty)
                 #self.layout.addWidget(section)
         
@@ -195,11 +196,12 @@ class FacultiesWindow(QMainWindow):
         #self.destroy()
 
 
-    def switch_to_edit_faculty(self, fact_id, fac_name, fac_info, img_url):
-        self.section_edit_window = faculty_edit.FacultyEditWindow(fac_id=fact_id, fac_name=fac_name, fac_info=fac_info, img_url=img_url)
-        self.section_edit_window.move(self.pos())
-        self.section_edit_window.resize(self.size())
-        self.section_edit_window.show()
+    def switch_to_edit_faculty(self, faculty_info):
+        #self.section_edit_window = faculty_edit.FacultyEditWindow(fac_id=fact_id, fac_name=fac_name, fac_info=fac_info, img_url=img_url)
+        self.faculty_edit_window = faculty_edit.FacultyEditWindow(faculty_info)
+        self.faculty_edit_window.move(self.pos())
+        self.faculty_edit_window.resize(self.size())
+        self.faculty_edit_window.show()
         self.close()
 
 

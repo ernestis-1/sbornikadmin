@@ -31,16 +31,27 @@ import contacts_screen
 
 
 class FacultyEditWindow(QMainWindow):
-    def __init__(self, fac_id=None, fac_name=None, fac_info=None, img_url=None):
+    def __init__(self, faculty_info=None):
         super().__init__()
         self.resize(800, 600)
         self.setWindowTitle("ИСП admin")
-        self.fac_id = fac_id
-        self.fac_name = fac_name
-        self.fac_info = fac_info
-        self.img_url = img_url
+        self.faculty_info = faculty_info
+        if self.faculty_info:
+            self.fac_id = faculty_info.fac_id
+            self.fac_name = faculty_info.fac_name
+            self.abbreviation = faculty_info.abbreviation
+            self.fac_type = faculty_info.fac_type
+            self.fac_info = faculty_info.info
+            self.img_url = faculty_info.img_url
+        else:
+            self.fac_id = None
+            self.fac_name = None
+            self.abbreviation = None
+            self.fac_type = 0
+            self.fac_info = None
+            self.img_url = None
         self.img_path = None
-        if (img_url is None) or (img_url==""):
+        if (self.img_url is None) or (self.img_url==""):
             self.init_ui()
             self.init_menu()
             self.init_toolbar()
@@ -49,9 +60,10 @@ class FacultyEditWindow(QMainWindow):
         
         self.status = QStatusBar()
         self.setStatusBar(self.status)
+        self.path = None
 
     def init_preloader(self):
-        self.resize(800,600)
+        #self.resize(800,600)
         self.preloader = Preloader()
         self.setCentralWidget(self.preloader)
 
@@ -89,6 +101,7 @@ class FacultyEditWindow(QMainWindow):
         
     def init_ui(self):
         self.main_widget = QWidget()
+        self.setCentralWidget(self.main_widget)
         main_layout = QVBoxLayout()
 
         self.title_layout = QVBoxLayout()
@@ -101,11 +114,12 @@ class FacultyEditWindow(QMainWindow):
 
         self.line_input_head = QLineEdit()#QPlainTextEdit
         fixedfontnazv = QFont()#QFontDatabase.systemFont(QFontDatabase.TitleFont)
-        fixedfontnazv.setPointSize(14)
+        fixedfontnazv.setPointSize(12)
         self.line_input_head.setFont(fixedfontnazv)
         if (self.fac_name):
             self.line_input_head.setText(self.fac_name)
-
+        self.line_input_head.setAlignment(Qt.AlignLeft)
+        self.line_input_head.setCursorPosition(0)
 
 
         #send_font = QFont()
@@ -125,11 +139,46 @@ class FacultyEditWindow(QMainWindow):
         self.title_layout.setAlignment(Qt.AlignTop)
         #self.title_layout.addStretch()
 
-        self.buttonContacts = QPushButton("Перейти к контактам")
-        self.buttonContacts.setFont(head_font)
-        self.buttonContacts.clicked.connect(self.open_contacts)
+        mid_fields_layout = QHBoxLayout()
+        mid_font = QFont()
+        mid_font.setPointSize(10)
 
-        self.title_layout.addWidget(self.buttonContacts)
+        combobox_layout = QVBoxLayout()
+        
+        combobox_label = QLabel()
+        combobox_label.setText("Тип СП")
+        combobox_label.setFont(mid_font)
+        self.type_combobox = QComboBox()
+        self.type_combobox_items = ["Структурное подразделение", "Факультет","Академия", "Институт"]
+        self.type_combobox.addItems(self.type_combobox_items) 
+        self.type_combobox.setFont(mid_font)
+        self.type_combobox.setCurrentIndex(self.fac_type)
+        
+        self.type_combobox.activated[str].connect(self.combobox_activated)
+
+        combobox_layout.addWidget(combobox_label)
+        combobox_layout.addWidget(self.type_combobox)
+
+        abbreviation_layout = QVBoxLayout()
+        
+        abbreviation_label = QLabel()
+        abbreviation_label.setText("Сокращенное название")
+        abbreviation_label.setFont(mid_font)
+        self.abbreviation_input = QLineEdit()
+        self.abbreviation_input.setFont(mid_font)
+        if self.abbreviation:
+            self.abbreviation_input.setText(self.abbreviation)
+
+        abbreviation_layout.addWidget(abbreviation_label)
+        abbreviation_layout.addWidget(self.abbreviation_input)
+
+        
+        mid_fields_layout.addLayout(combobox_layout)
+        mid_fields_layout.addLayout(abbreviation_layout)
+        self.title_layout.addLayout(mid_fields_layout)
+
+
+        
 
 
         self.label_image = QLabel()
@@ -145,13 +194,13 @@ class FacultyEditWindow(QMainWindow):
         self.label_image.setPixmap(pixmap)
 
         
-        #self.label_image.setMaximumWidth(label_size)
+        self.label_image.setMaximumWidth(self.label_size)
         #self.label_image.setMaximumHeight(label_size+50)
         
-        #self.label_image.setMinimumWidth(label_size)
+        #self.label_image.setMinimumWidth(self.label_size)
         #self.label_image.setMinimumHeight(label_size-50)
         #self.label_image.saveGeometry()
-        self.label_image.setFixedWidth(self.label_size)
+        #self.label_image.setFixedWidth(self.label_size)
         
         
         
@@ -202,8 +251,18 @@ class FacultyEditWindow(QMainWindow):
             self.editor.setPlainText(self.fac_info)
 
 
+        
+
+
         self.title_layout.addLayout(editor_head_layout)
         self.title_layout.addWidget(self.editor)
+        
+        self.buttonContacts = QPushButton("Перейти к контактам")
+        self.buttonContacts.setFont(head_font)
+        self.buttonContacts.clicked.connect(self.open_contacts)
+
+        self.title_layout.addWidget(self.buttonContacts)
+
         self.title_layout.addWidget(self.button_send)
         
 
@@ -232,7 +291,7 @@ class FacultyEditWindow(QMainWindow):
         #main_layout.addWidget(self.editor)
         #main_layout.addStretch()       
         self.main_widget.setLayout(main_layout)
-        self.setCentralWidget(self.main_widget)
+        
 
 
     def add_delete_button(self):
@@ -336,11 +395,16 @@ class FacultyEditWindow(QMainWindow):
             print("return")
             return
         self.buttonContacts.setEnabled(False)
-        self.contacts_window = contacts_screen.ContactsWindow(self.fac_id, self.fac_name, self.fac_info, self.img_url)
+        self.contacts_window = contacts_screen.ContactsWindow(faculty_info=self.faculty_info)
         self.contacts_window.move(self.pos())
         self.contacts_window.resize(self.size())
         self.contacts_window.show()
         self.close()
+
+
+    def combobox_activated(self, text):
+        #print(self.type_combobox_items[self.type_combobox.currentIndex()])
+        pass
 
     
     def init_toolbar(self):
@@ -432,8 +496,10 @@ class FacultyEditWindow(QMainWindow):
                 #print(self.line_input_head.text())
                 j = {
                         "name": str(self.line_input_head.text()),
+                        "abbreviation": str(self.abbreviation_input.text()),
+                        "type": self.type_combobox.currentIndex(),
                         "info": self.editor.toPlainText(),
-                        "picture": "",
+                        "picture": ""
                     }
                 if (self.img_path):
                     j["picture"] = redakt4.get_photo_uri(self.img_path)
@@ -455,6 +521,8 @@ class FacultyEditWindow(QMainWindow):
             j = {
                     "id": self.fac_id,
                     "name": str(self.line_input_head.text()),
+                    "abbreviation": str(self.abbreviation_input.text()),
+                    "type": self.type_combobox.currentIndex(),
                     "info": self.editor.toPlainText(),
                     "picture": ""
                 }
@@ -569,7 +637,7 @@ class FacultyEditWindow(QMainWindow):
         
         self.img_path = file_name
         self.img_url = None
-        background = QPixmap(file_name) #.scaled(100,100) 
+        background = QPixmap(file_name).scaled(self.label_size, self.label_maximum_height, Qt.KeepAspectRatio) 
         #pixmap = QPixmap(file_name)
         self.label_image.setPixmap(background)
 
