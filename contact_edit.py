@@ -22,15 +22,16 @@ import faculties_screen, faculty_edit, contacts_screen, section_screen
 import global_constants
 
 class ContactEditorWindow(QMainWindow):
-    def __init__(self, fac_id=None, fac_name=None, fac_info=None, fac_url=None,
+    def __init__(self, faculty_info=None,
                     contact_id=None, contact_name=None, contact_position=None, contact_number=None, 
                     photo_path = None, photo_url=None, contact_links=[]):
         QMainWindow.__init__(self)
-        self.fac_id = fac_id
-        self.fac_name = fac_name
-        self.fac_info = fac_info
-        self.fac_url = fac_url
-        
+        self.faculty_info = faculty_info
+        if self.faculty_info:
+            self.fac_id = self.faculty_info.fac_id
+        else:
+            self.fac_id = None
+
         self.contact_id = contact_id
         self.contact_name = contact_name
         self.contact_position = contact_position
@@ -312,8 +313,7 @@ class ContactEditorWindow(QMainWindow):
         if self.fac_id is None:
             return
         self.button_back.setEnabled(False)
-        self.contacts_window = contacts_screen.ContactsWindow(fac_id=self.fac_id, fac_name=self.fac_name, 
-                fac_info=self.fac_info, fac_img_url=self.fac_url)
+        self.contacts_window = contacts_screen.ContactsWindow(faculty_info=self.faculty_info)
         self.contacts_window.move(self.pos())
         self.contacts_window.resize(self.size())
         self.contacts_window.show()

@@ -87,13 +87,20 @@ class Contact(QPushButton):
 
 
 class ContactsWindow(QMainWindow):
-    def __init__(self, fac_id=None, fac_name=None, fac_info=None, fac_img_url=None):
+    def __init__(self, faculty_info=None):
         QMainWindow.__init__(self)
         self.resize(800,600)
-        self.fac_id = fac_id
-        self.fac_name = fac_name
-        self.fac_info = fac_info
-        self.fac_img_url = fac_img_url
+        self.faculty_info = faculty_info
+        if self.faculty_info:
+            self.fac_id = faculty_info.fac_id
+            self.fac_name = faculty_info.fac_name
+            self.fac_info = faculty_info.info
+            self.fac_img_url = faculty_info.img_url
+        else:
+            self.fac_id = None
+            self.fac_name = None
+            self.fac_info = None
+            self.fac_img_url = None
         self.contacts_inited = False
         self.api = FacultiesApi(global_constants.FACULTIES_API, global_constants.FACULTIES_INFO_API, global_constants.FACULTIES_INFO_ID)
         self.setWindowTitle("Контакты")
@@ -259,11 +266,11 @@ class ContactsWindow(QMainWindow):
 
     def back_to_faculty_edit(self):
         self.button_back.setEnabled(False)
-        self.switch_to_edit_faculty(self.fac_id, self.fac_name, self.fac_info, self.fac_img_url)
+        self.switch_to_edit_faculty(faculty_info=self.faculty_info)
 
 
-    def switch_to_edit_faculty(self, fact_id, fac_name, fac_info, img_url):
-        self.section_edit_window = faculty_edit.FacultyEditWindow(fac_id=fact_id, fac_name=fac_name, fac_info=fac_info, img_url=img_url)
+    def switch_to_edit_faculty(self, faculty_info=None):
+        self.section_edit_window = faculty_edit.FacultyEditWindow(faculty_info=faculty_info)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
         self.section_edit_window.show()
@@ -287,8 +294,7 @@ class ContactsWindow(QMainWindow):
     
 
     def add_contact_clicked(self):
-        self.contact_window = contact_edit.ContactEditorWindow(fac_id=self.fac_id, fac_name=self.fac_name, 
-                fac_info=self.fac_info, fac_url=self.fac_img_url)
+        self.contact_window = contact_edit.ContactEditorWindow(faculty_info=self.faculty_info)
         self.contact_window.move(self.pos())
         self.contact_window.resize(self.size())
         self.contact_window.show()
@@ -297,7 +303,7 @@ class ContactsWindow(QMainWindow):
 
     def open_contact_edit(self, contact_id, contact_name, contact_position, contact_number, photo_path, photo_url, contact_links):
         #print(photo_path)
-        self.contact_window = contact_edit.ContactEditorWindow(self.fac_id, self.fac_name, self.fac_info, self.fac_img_url,
+        self.contact_window = contact_edit.ContactEditorWindow(self.faculty_info,
                 contact_id, contact_name, contact_position, contact_number, 
                 photo_path, photo_url, contact_links)
         self.contact_window.move(self.pos())
