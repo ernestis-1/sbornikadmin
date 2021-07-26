@@ -68,25 +68,38 @@ class ContactEditorWindow(QMainWindow):
         self.font_lines.setPointSize(12)
 
         self.label_name = QtWidgets.QLabel()
-        #self.label_name.setGeometry(QtCore.QRect(470, 30, 181, 20))
         self.label_name.setObjectName("label_name")
         self.label_name.setFont(font_labels)
 
         self.lineEdit_name = QtWidgets.QLineEdit()
-        #self.lineEdit_name.setGeometry(QtCore.QRect(470, 60, 311, 21))
         self.lineEdit_name.setObjectName("lineEdit")
         self.lineEdit_name.setFont(self.font_lines)
         if self.contact_name:
             self.lineEdit_name.setText(self.contact_name)
         self.lineEdit_name.setCursorPosition(0)
 
+        #group_layout = QHBoxLayout()
+        #group_layout.setAlignment(Qt.AlignLeft)
+
+        self.label_group = QLabel()
+        self.label_group.setObjectName("label_group")
+        self.label_group.setFont(font_labels)
+
+        self.group_combobox = QComboBox()
+        self.group_combobox_items = ["Дирекция", "Студсовет", "Другое"]
+        self.group_combobox.addItems(self.group_combobox_items) 
+        self.group_combobox.setFont(self.font_lines)
+        #self.type_combobox.setCurrentIndex(self.fac_type)
+
+        #group_layout.addWidget(self.label_group)
+        #group_layout.addWidget(self.group_combobox)
+        
+
         self.label_phone_number = QtWidgets.QLabel()
-        #self.label__phone_number.setGeometry(QtCore.QRect(470, 100, 181, 16))
         self.label_phone_number.setObjectName("label_phone_number")
         self.label_phone_number.setFont(font_labels)
 
         self.lineEdit_phone_number = QtWidgets.QLineEdit()
-        #self.lineEdit_phone_number.setGeometry(QtCore.QRect(470, 130, 311, 21))
         self.lineEdit_phone_number.setObjectName("lineEdit_phone_number")
         self.lineEdit_phone_number.setFont(self.font_lines)
         if self.contact_number:
@@ -146,6 +159,10 @@ class ContactEditorWindow(QMainWindow):
 
         self.labels_layout.addWidget(self.label_name)
         self.labels_layout.addWidget(self.lineEdit_name)
+
+        self.labels_layout.addWidget(self.label_group)
+        self.labels_layout.addWidget(self.group_combobox)
+        #self.labels_layout.addLayout(group_layout)
 
         self.labels_layout.addWidget(self.label_position)
         self.labels_layout.addWidget(self.lineEdit_position)
@@ -488,6 +505,7 @@ class ContactEditorWindow(QMainWindow):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("MainWindow", "ИСП admin"))
         self.label_name.setText(_translate("MainWindow", "Имя контакта:"))
+        self.label_group.setText(_translate("MainWindow", "Группа контакта:"))
         self.label_phone_number.setText(_translate("MainWindow", "Телефон контакта:"))
         self.label_position.setText(_translate("MainWindow", "Должность контакта:"))
         #self.attach_button.setText(_translate("MainWindow", "<Прикрепите фото контакта>"))
