@@ -78,6 +78,7 @@ class ContactEditorWindow(QMainWindow):
         self.lineEdit_name.setFont(self.font_lines)
         if self.contact_name:
             self.lineEdit_name.setText(self.contact_name)
+        self.lineEdit_name.setCursorPosition(0)
 
         self.label_phone_number = QtWidgets.QLabel()
         #self.label__phone_number.setGeometry(QtCore.QRect(470, 100, 181, 16))
@@ -90,6 +91,7 @@ class ContactEditorWindow(QMainWindow):
         self.lineEdit_phone_number.setFont(self.font_lines)
         if self.contact_number:
             self.lineEdit_phone_number.setText(self.contact_number)
+        self.lineEdit_phone_number.setCursorPosition(0)
         
         self.label_position = QtWidgets.QLabel()
         #self.label_position.setGeometry(QtCore.QRect(470, 170, 211, 16))
@@ -102,6 +104,7 @@ class ContactEditorWindow(QMainWindow):
         self.lineEdit_position.setFont(self.font_lines)
         if self.contact_position:
             self.lineEdit_position.setText(self.contact_position)
+        self.lineEdit_position.setCursorPosition(0)
 
         links_widget = QWidget()
         self.links_layout = QVBoxLayout()

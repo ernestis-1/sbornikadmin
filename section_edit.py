@@ -70,6 +70,7 @@ class SectionEditWindow(QMainWindow):
         self.line_input_head.setFont(font_input)
         if (self.name):
             self.line_input_head.setText(self.name)
+        self.line_input_head.setCursorPosition(0)
 
         font_head = QFont()
         font_head.setPointSize(12)

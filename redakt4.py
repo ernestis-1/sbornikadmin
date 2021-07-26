@@ -124,6 +124,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.label_nazv.setFont(fixedfontnazv)
         if self.article_name:
             self.label_nazv.setText(self.article_name)
+        self.label_nazv.setCursorPosition(0)
         layout.addWidget(self.label_nazv)
         
         self.editor = QTextEdit()  # QPlainTextEdit 
