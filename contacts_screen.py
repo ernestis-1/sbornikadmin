@@ -21,6 +21,7 @@ import faculties_screen
 import global_constants
 import section_screen
 import contact_edit
+from authorization_api import AuthorizationApi
 
 class Contact(QPushButton):
     def __init__(self, contact_id=None, contact_name=None, contact_position=None, photo_url=None, 
@@ -87,9 +88,10 @@ class Contact(QPushButton):
 
 
 class ContactsWindow(QMainWindow):
-    def __init__(self, faculty_info=None):
+    def __init__(self, faculty_info=None, authorization_api=AuthorizationApi()):
         QMainWindow.__init__(self)
         self.resize(800,600)
+        self.authorization_api = authorization_api
         self.faculty_info = faculty_info
         if self.faculty_info:
             self.fac_id = faculty_info.fac_id
@@ -256,7 +258,7 @@ class ContactsWindow(QMainWindow):
 
     def add_faculty_clicked(self):
         #print("clicked!")
-        self.faculty_edit_window = faculty_edit.FacultyEditWindow()
+        self.faculty_edit_window = faculty_edit.FacultyEditWindow(authorization_api=self.authorization_api)
         self.faculty_edit_window.move(self.pos())
         self.faculty_edit_window.resize(self.size())
         self.faculty_edit_window.show()
@@ -270,7 +272,7 @@ class ContactsWindow(QMainWindow):
 
 
     def switch_to_edit_faculty(self, faculty_info=None):
-        self.section_edit_window = faculty_edit.FacultyEditWindow(faculty_info=faculty_info)
+        self.section_edit_window = faculty_edit.FacultyEditWindow(faculty_info=faculty_info, authorization_api=self.authorization_api)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
         self.section_edit_window.show()
@@ -278,7 +280,7 @@ class ContactsWindow(QMainWindow):
 
 
     def switch_to_sbornic(self):
-        self.sbornic_screen = section_screen.SectionsWindow()
+        self.sbornic_screen = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sbornic_screen.move(self.pos())
         self.sbornic_screen.resize(self.size())
         self.sbornic_screen.show()
@@ -286,7 +288,7 @@ class ContactsWindow(QMainWindow):
 
 
     def faculties_list_action_triggered(self):
-        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
         self.faculties_window.show()
@@ -294,7 +296,7 @@ class ContactsWindow(QMainWindow):
     
 
     def add_contact_clicked(self):
-        self.contact_window = contact_edit.ContactEditorWindow(faculty_info=self.faculty_info)
+        self.contact_window = contact_edit.ContactEditorWindow(faculty_info=self.faculty_info, authorization_api=self.authorization_api)
         self.contact_window.move(self.pos())
         self.contact_window.resize(self.size())
         self.contact_window.show()
@@ -305,7 +307,8 @@ class ContactsWindow(QMainWindow):
         #print(photo_path)
         self.contact_window = contact_edit.ContactEditorWindow(self.faculty_info,
                 contact_id, contact_name, contact_position, contact_number, 
-                photo_path, photo_url, contact_links)
+                photo_path, photo_url, contact_links,
+                authorization_api=self.authorization_api)
         self.contact_window.move(self.pos())
         self.contact_window.resize(self.size())
         self.contact_window.show()

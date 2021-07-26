@@ -27,12 +27,16 @@ import faculties_screen
 import global_constants
 from sections_api import FullArticleInfo, ArticleApi
 from preloader import Preloader
+from authorization_api import AuthorizationApi
+from login_screen import LoginWindow
 
 
 class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
-    def __init__(self, article_id=None, parent_id=9, article_name=None, sect_name=None, sect_img_path=None, sect_img_url=None):
+    def __init__(self, article_id=None, parent_id=9, article_name=None, sect_name=None, sect_img_path=None, sect_img_url=None,
+            authorization_api=AuthorizationApi()):
         super(EditorWindow, self).__init__()
+        self.authorization_api = authorization_api
         self.resize(800,600)
         self.setWindowTitle("ИСП admin")
         self.is_keep_path = False
@@ -296,7 +300,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
 
     def sections_list_action_triggered(self):
-        self.sections_window = section_screen.SectionsWindow()
+        self.sections_window = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sections_window.move(self.pos())
         self.sections_window.resize(self.size())
         self.sections_window.show()
@@ -306,7 +310,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
     
     def section_edit_action_triggered(self):
         #print("clicked!")
-        self.section_edit_window = section_edit.SectionEditWindow()
+        self.section_edit_window = section_edit.SectionEditWindow(authorization_api=self.authorization_api)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
         self.section_edit_window.show()
@@ -317,7 +321,8 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
     def back_to_section_edit(self):
         #print("clicked!")
         self.is_keep_path = True
-        self.section_edit_window = section_edit.SectionEditWindow(self.sect_id, self.sect_name, self.sect_img_path, self.sect_img_url)
+        self.section_edit_window = section_edit.SectionEditWindow(self.sect_id, self.sect_name, self.sect_img_path, self.sect_img_url,
+                authorization_api=self.authorization_api)
         self.button_back.setEnabled(False)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
@@ -327,7 +332,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
     
     def switch_to_faculty(self):
-        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
         self.faculties_window.show()
@@ -559,7 +564,17 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
 #функция для отправления все на сервер
     def edit_article_event(self):
-        print("edit article")
+        #print("edit article")
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
         if self.photo_urls_list is None:
             self.photo_urls_list = []
         for filename in self.new_photoes:
@@ -580,7 +595,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
                 }
             url = global_constants.ARTICLE_API
             try:
-                res = requests.put(url, json=j)
+                res = requests.put(url, json=j, headers=headers)
                 self.status.showMessage("Статья отправлена")
                 
             except Exception as e:
@@ -595,7 +610,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
                 }
             url = global_constants.ARTICLE_API
             try:
-                res = requests.post(url, json=j)
+                res = requests.post(url, json=j, headers=headers)
                 self.status.showMessage("Статья отправлена")
                 self.button_edit_article.setText("Отправить изменения")
                 self.article_id = res.json()['id']
@@ -607,9 +622,19 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
     def delete_article(self):
         if self.article_id is None:
             return
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
         #payload = {'id': self.sect_id}
         try:
-            r = requests.delete(global_constants.ARTICLE_API+f"/{self.article_id}")
+            r = requests.delete(global_constants.ARTICLE_API+f"/{self.article_id}", headers=headers)
             if (r.status_code == 200):
                 self.status.showMessage("Статья удалена!")
                 #self.sections_list_action_triggered()

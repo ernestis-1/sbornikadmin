@@ -20,12 +20,15 @@ import requests
 import redakt4
 import faculties_screen, faculty_edit, contacts_screen, section_screen
 import global_constants
+from authorization_api import AuthorizationApi
+from login_screen import LoginWindow
 
 class ContactEditorWindow(QMainWindow):
     def __init__(self, faculty_info=None,
                     contact_id=None, contact_name=None, contact_position=None, contact_number=None, 
-                    photo_path = None, photo_url=None, contact_links=[]):
+                    photo_path = None, photo_url=None, contact_links=[], authorization_api=AuthorizationApi()):
         QMainWindow.__init__(self)
+        self.authorization_api = authorization_api
         self.faculty_info = faculty_info
         if self.faculty_info:
             self.fac_id = self.faculty_info.fac_id
@@ -305,7 +308,7 @@ class ContactEditorWindow(QMainWindow):
 
     def add_faculty_clicked(self):
         #print("clicked!")
-        self.faculty_edit_window = faculty_edit.FacultyEditWindow()
+        self.faculty_edit_window = faculty_edit.FacultyEditWindow(authorization_api=self.authorization_api)
         self.faculty_edit_window.move(self.pos())
         self.faculty_edit_window.resize(self.size())
         self.faculty_edit_window.show()
@@ -314,7 +317,7 @@ class ContactEditorWindow(QMainWindow):
 
 
     def switch_to_sbornic(self):
-        self.sbornic_screen = section_screen.SectionsWindow()
+        self.sbornic_screen = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sbornic_screen.move(self.pos())
         self.sbornic_screen.resize(self.size())
         self.sbornic_screen.show()
@@ -322,7 +325,7 @@ class ContactEditorWindow(QMainWindow):
 
 
     def faculties_list_action_triggered(self):
-        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
         self.faculties_window.show()
@@ -333,7 +336,7 @@ class ContactEditorWindow(QMainWindow):
         if self.fac_id is None:
             return
         self.button_back.setEnabled(False)
-        self.contacts_window = contacts_screen.ContactsWindow(faculty_info=self.faculty_info)
+        self.contacts_window = contacts_screen.ContactsWindow(faculty_info=self.faculty_info, authorization_api=self.authorization_api)
         self.contacts_window.move(self.pos())
         self.contacts_window.resize(self.size())
         self.contacts_window.show()
@@ -357,9 +360,19 @@ class ContactEditorWindow(QMainWindow):
     def delete_contact(self):
         if self.contact_id is None:
             return
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
         #payload = {'id': self.sect_id}
         try:
-            r = requests.delete(global_constants.CONTACTS_API+f"/{self.contact_id}")
+            r = requests.delete(global_constants.CONTACTS_API+f"/{self.contact_id}", headers=headers)
             if (r.status_code == 200):
                 self.status.showMessage("Контакт удалён!")
                 self.back_to_contacts()
@@ -383,6 +396,16 @@ class ContactEditorWindow(QMainWindow):
     def edit_contact(self):
         #print("edit section")
         #s = self.button_create.text()
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
         if self.contact_id is None:
             self.button_edit.setText("Отправить изменения")
             try:
@@ -399,7 +422,7 @@ class ContactEditorWindow(QMainWindow):
                     self.photo_url = redakt4.get_photo_uri(self.photo_path)
                     j["photo"] = self.photo_url
                 #print(j)
-                r = requests.post(global_constants.CONTACTS_API, json=j)
+                r = requests.post(global_constants.CONTACTS_API, json=j, headers=headers)
                 if (r.status_code == 200):
                     self.status.showMessage("Контакт создан!")
                     #print(r.json())
@@ -435,7 +458,7 @@ class ContactEditorWindow(QMainWindow):
                 else:
                     pass
             try:
-                r = requests.put(global_constants.CONTACTS_API, json=j)
+                r = requests.put(global_constants.CONTACTS_API, json=j, headers=headers)
                 if (r.status_code == 200):
                     self.status.showMessage("Изменения отправлены!")
                     #print(r.json())

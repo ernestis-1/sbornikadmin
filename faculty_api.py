@@ -5,13 +5,21 @@ from aiohttp.helpers import content_disposition_header
 from sections_api import write_image, get_image_path_from_url
 
 class BaseFacultyInfo:
-    def __init__(self, fac_id, fac_name, abbreviation, fac_type, info, img_url):
+    def __init__(self, fac_id=None, fac_name=None, abbreviation=None, fac_type=None, info=None, img_url=None):
         self.fac_id = fac_id
         self.fac_name = fac_name
         self.abbreviation = abbreviation
         self.fac_type = fac_type
         self.info = info
         self.img_url = img_url
+    
+    def init_from_dict(self, dict):
+        self.fac_id = dict["id"]
+        self.fac_name = dict["name"]
+        self.abbreviation = dict["abbreviation"]
+        self.fac_type = dict["type"]
+        self.info = dict["info"]
+        self.img_url = dict["picture"]
 
 
 class ContactInfo:

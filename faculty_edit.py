@@ -1,4 +1,5 @@
 #работа с библиотекой PyQt5.QtGui(виджеты и прочее)
+from faculty_api import BaseFacultyInfo
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -28,14 +29,17 @@ import global_constants
 import section_screen, faculties_screen
 import redakt4
 import contacts_screen
+from authorization_api import AuthorizationApi
+from login_screen import LoginWindow
 
 
 class FacultyEditWindow(QMainWindow):
-    def __init__(self, faculty_info=None):
+    def __init__(self, faculty_info=None, authorization_api=AuthorizationApi()):
         super().__init__()
         self.resize(800, 600)
         self.setWindowTitle("ИСП admin")
         self.faculty_info = faculty_info
+        self.authorization_api = authorization_api
         if self.faculty_info:
             self.fac_id = faculty_info.fac_id
             self.fac_name = faculty_info.fac_name
@@ -81,7 +85,7 @@ class FacultyEditWindow(QMainWindow):
 
     
     def showEvent(self, event):
-        if (self.img_url):
+        if self.img_url:
             asyncio.ensure_future(self.init_content())
 
         
@@ -374,7 +378,7 @@ class FacultyEditWindow(QMainWindow):
 
 
     def faculties_list_action_triggered(self):
-        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.button_back.setEnabled(False)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
@@ -383,7 +387,7 @@ class FacultyEditWindow(QMainWindow):
 
 
     def switch_to_sbornic(self):
-        self.sbornic_screen = section_screen.SectionsWindow()
+        self.sbornic_screen = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sbornic_screen.move(self.pos())
         self.sbornic_screen.resize(self.size())
         self.sbornic_screen.show()
@@ -395,7 +399,7 @@ class FacultyEditWindow(QMainWindow):
             print("return")
             return
         self.buttonContacts.setEnabled(False)
-        self.contacts_window = contacts_screen.ContactsWindow(faculty_info=self.faculty_info)
+        self.contacts_window = contacts_screen.ContactsWindow(faculty_info=self.faculty_info, authorization_api=self.authorization_api)
         self.contacts_window.move(self.pos())
         self.contacts_window.resize(self.size())
         self.contacts_window.show()
@@ -490,6 +494,16 @@ class FacultyEditWindow(QMainWindow):
     def edit_faculty(self):
         #print("edit section")
         #s = self.button_create.text()
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
         if self.fac_id is None:
             self.button_send.setText("Отправить изменения")
             try:
@@ -504,12 +518,15 @@ class FacultyEditWindow(QMainWindow):
                 if (self.img_path):
                     j["picture"] = redakt4.get_photo_uri(self.img_path)
                 #print(j)
-                r = requests.post(global_constants.FACULTIES_API, json=j)
+                r = requests.post(global_constants.FACULTIES_API, json=j, headers=headers)
                 if (r.status_code == 200):
                     self.status.showMessage("Факультет создан!")
                     #print(r.json())
                     self.fac_id = r.json()['id']
                     self.name = r.json()['name']
+                    if self.faculty_info is None:
+                        self.faculty_info = BaseFacultyInfo()
+                    self.faculty_info.init_from_dict(r.json())
                     self.add_delete_button()
                 else:
                     print(r.status_code)
@@ -537,12 +554,15 @@ class FacultyEditWindow(QMainWindow):
                 else:
                     pass
             try:
-                r = requests.put(global_constants.FACULTIES_API, json=j)
+                r = requests.put(global_constants.FACULTIES_API, json=j, headers=headers)
                 if (r.status_code == 200):
                     self.status.showMessage("Изменения отправлены!")
                     #print(r.json())
                     self.fac_id = r.json()['id']
                     self.name = r.json()['name']
+                    if self.faculty_info is None:
+                        self.faculty_info = BaseFacultyInfo()
+                    self.faculty_info.init_from_dict(r.json())
                 else:
                     print(r.status_code)
             except Exception as e:

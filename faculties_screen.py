@@ -29,6 +29,7 @@ from faculty_api import FacultiesApi, BaseFacultyInfo
 import faculty_edit
 import global_constants
 import section_screen
+from authorization_api import AuthorizationApi
 
 
 class Faculty(QPushButton):
@@ -87,10 +88,10 @@ class Faculty(QPushButton):
         
 
 
-
 class FacultiesWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, authorization_api=AuthorizationApi()):
         QMainWindow.__init__(self)
+        self.authorization_api = authorization_api
         self.resize(800, 600)
         self.api = FacultiesApi(global_constants.FACULTIES_API)
         self.faculties_inited = False
@@ -187,7 +188,7 @@ class FacultiesWindow(QMainWindow):
 
     def add_faculty_clicked(self):
         #print("clicked!")
-        self.faculty_edit_window = faculty_edit.FacultyEditWindow()
+        self.faculty_edit_window = faculty_edit.FacultyEditWindow(authorization_api=self.authorization_api)
         self.add_section_button.setEnabled(False)
         self.faculty_edit_window.move(self.pos())
         self.faculty_edit_window.resize(self.size())
@@ -198,7 +199,7 @@ class FacultiesWindow(QMainWindow):
 
     def switch_to_edit_faculty(self, faculty_info):
         #self.section_edit_window = faculty_edit.FacultyEditWindow(fac_id=fact_id, fac_name=fac_name, fac_info=fac_info, img_url=img_url)
-        self.faculty_edit_window = faculty_edit.FacultyEditWindow(faculty_info)
+        self.faculty_edit_window = faculty_edit.FacultyEditWindow(faculty_info, authorization_api=self.authorization_api)
         self.faculty_edit_window.move(self.pos())
         self.faculty_edit_window.resize(self.size())
         self.faculty_edit_window.show()
@@ -206,7 +207,7 @@ class FacultiesWindow(QMainWindow):
 
 
     def switch_to_sbornic(self):
-        self.sbornic_screen = section_screen.SectionsWindow()
+        self.sbornic_screen = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sbornic_screen.move(self.pos())
         self.sbornic_screen.resize(self.size())
         self.sbornic_screen.show()
@@ -282,8 +283,8 @@ if __name__ == "__main__":
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
 
-
-    facultiesWindow = FacultiesWindow()
+    authorization_api = AuthorizationApi()
+    facultiesWindow = FacultiesWindow(authorization_api=authorization_api)
     facultiesWindow.show()
 
     with loop:

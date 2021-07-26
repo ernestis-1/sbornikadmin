@@ -13,6 +13,7 @@ from preloader import Preloader
 #from section_edit import SectionEditWindow
 import section_edit, redakt4
 import faculties_screen
+from authorization_api import AuthorizationApi
 
 class Section(QPushButton):
     def __init__(self, sect_id=-1, img_path=None, section_name="section name", sectionsWindow=None):
@@ -70,9 +71,10 @@ class Section(QPushButton):
 class SectionsWindow(QMainWindow, QWidget):
     #async_sections_sygnal = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, authorization_api=AuthorizationApi()):
         super(SectionsWindow, self).__init__()
         self.resize(800, 600)
+        self.authorization_api = authorization_api
         self.api = SectionsApi(SECTIONS_API)
         self.sections_inited = False
         self.init_ui()
@@ -146,7 +148,7 @@ class SectionsWindow(QMainWindow, QWidget):
     def add_section_clicked(self):
         #print("clicked!")
         self.add_section_button.setEnabled(False)
-        self.section_edit_window = section_edit.SectionEditWindow()
+        self.section_edit_window = section_edit.SectionEditWindow(authorization_api=self.authorization_api)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
         self.section_edit_window.show()
@@ -155,7 +157,7 @@ class SectionsWindow(QMainWindow, QWidget):
 
 
     def switch_to_faculty(self):
-        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
         self.faculties_window.show()
@@ -163,7 +165,7 @@ class SectionsWindow(QMainWindow, QWidget):
 
 
     def switch_to_edit_section(self, sect_id, sect_name, sect_img):
-        self.section_edit_window = section_edit.SectionEditWindow(sect_id=sect_id, name=sect_name, filepath=sect_img)
+        self.section_edit_window = section_edit.SectionEditWindow(sect_id=sect_id, name=sect_name, filepath=sect_img, authorization_api=self.authorization_api)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
         self.section_edit_window.show()
@@ -171,7 +173,7 @@ class SectionsWindow(QMainWindow, QWidget):
 
 
     def redakt_action_triggered(self):
-        self.redakt_window = redakt4.EditorWindow()
+        self.redakt_window = redakt4.EditorWindow(authorization_api=self.authorization_api)
         self.redakt_window.move(self.pos())
         self.redakt_window.resize(self.size())
         self.redakt_window.show()
@@ -303,7 +305,8 @@ def main():
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
 
-    MainWindow = SectionsWindow()
+    authorization_api = AuthorizationApi()
+    MainWindow = SectionsWindow(authorization_api=authorization_api)
     MainWindow.show()
     #print("show")
     

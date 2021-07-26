@@ -19,6 +19,9 @@ import global_constants
 import requests
 import asyncio
 
+from authorization_api import AuthorizationApi
+from login_screen import LoginWindow
+
 class Article(QPushButton):
     def __init__(self, article_info=None, sectionEditWindow=None):
         QPushButton.__init__(self, text=article_info.article_title)
@@ -40,9 +43,9 @@ class Article(QPushButton):
 
 
 class SectionEditWindow(QMainWindow):
-    def __init__(self, sect_id=None, name=None, filepath=None, img_url=None):
+    def __init__(self, sect_id=None, name=None, filepath=None, img_url=None, authorization_api=AuthorizationApi()):
         super().__init__()
-        
+        self.authorization_api = authorization_api
         #existing section parameters
         self.sect_id = sect_id
         self.name = name
@@ -337,9 +340,19 @@ class SectionEditWindow(QMainWindow):
     def delete_section(self):
         if self.sect_id is None:
             return
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
         #payload = {'id': self.sect_id}
         try:
-            r = requests.delete(global_constants.ARTICLE_API+f"/{self.sect_id}")
+            r = requests.delete(global_constants.ARTICLE_API+f"/{self.sect_id}", headers=headers)
             if (r.status_code == 200):
                 self.status.showMessage("Раздел удалён!")
                 self.sections_list_action_triggered()
@@ -377,7 +390,7 @@ class SectionEditWindow(QMainWindow):
 
     def sections_list_action_triggered(self):
         self.button_back.setEnabled(False)
-        self.sections_window = section_screen.SectionsWindow()
+        self.sections_window = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sections_window.move(self.pos())
         self.sections_window.resize(self.size())
         self.sections_window.show()
@@ -392,7 +405,8 @@ class SectionEditWindow(QMainWindow):
         self.add_article_button.setEnabled(False)
         self.is_keep_path = True
         self.article_window = redakt4.EditorWindow(article_id=article_id, parent_id=self.sect_id, article_name=article_name,
-                                sect_name=self.name, sect_img_path=self.image_file_name, sect_img_url=self.img_url)
+                                sect_name=self.name, sect_img_path=self.image_file_name, sect_img_url=self.img_url, 
+                                authorization_api=self.authorization_api)
         self.article_window.move(self.pos())
         self.article_window.resize(self.size())
         self.article_window.show()
@@ -400,14 +414,14 @@ class SectionEditWindow(QMainWindow):
 
 
     def redakt_action_triggered(self):
-        self.redakt_window = redakt4.EditorWindow()
+        self.redakt_window = redakt4.EditorWindow(authorization_api=self.authorization_api)
         self.redakt_window.move(self.pos())
         self.redakt_window.resize(self.size())
         self.redakt_window.show()
         self.close()
 
     def switch_to_faculty(self):
-        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
         self.faculties_window.show()
@@ -416,7 +430,17 @@ class SectionEditWindow(QMainWindow):
 
     def edit_section_clicked(self):
         #print("edit section")
-        s = self.button_create.text()
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
+        #s = self.button_create.text()
         if self.sect_id is None:
             print("here")
             self.button_create.setText("Отправить изменения")
@@ -431,7 +455,7 @@ class SectionEditWindow(QMainWindow):
                 if (self.image_file_name):
                     j["picture"] = redakt4.get_photo_uri(self.image_file_name)
                 #print(j)
-                r = requests.post(global_constants.ARTICLE_API, json=j)
+                r = requests.post(global_constants.ARTICLE_API, json=j, headers=headers)
                 if (r.status_code == 200):
                     self.status.showMessage("Раздел создан!")
                     #print(r.json())
@@ -465,7 +489,7 @@ class SectionEditWindow(QMainWindow):
                 else:
                     pass
             try:
-                r = requests.put(global_constants.ARTICLE_API, json=j)
+                r = requests.put(global_constants.ARTICLE_API, json=j, headers=headers)
                 if (r.status_code == 200):
                     self.status.showMessage("Изменения отправлены!")
                     #print(r.json())
