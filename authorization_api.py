@@ -1,6 +1,8 @@
 import requests
 import json
 import global_constants
+import aiohttp
+import asyncio
 
 class AuthorizationApi:
     def __init__(self, filename = "remember.json", remember_me=False, login=None, password=None):
@@ -37,3 +39,34 @@ class AuthorizationApi:
                 return None
         else:
             return None
+
+
+class UserData:
+    def __init__(self, login=None, password=None, role=None):
+        self.login = login
+        self.password = password
+        self.role = role
+
+    def init_from_dict(self, dict):
+        self.login = dict["login"]
+        if "password" in dict.keys():
+            self.password = dict["password"]
+        self.role = dict["role"]
+
+
+class UserApi:
+    def __init__(self, url=global_constants.USER_API, token=None):
+        self.url = url
+        self.token = token
+
+    async def get_users(self):
+        headers = {"Authorization": "Bearer "+self.token}
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(self.url) as r:
+                j = await r.json()
+        l = []
+        for user_dict in j:
+            user_data = UserData()
+            user_data.init_from_dict(user_dict)
+            l.append(user_data)
+        return l

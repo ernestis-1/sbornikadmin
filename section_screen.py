@@ -12,7 +12,7 @@ from global_constants import SECTIONS_API
 from preloader import Preloader
 #from section_edit import SectionEditWindow
 import section_edit, redakt4
-import faculties_screen
+import faculties_screen, admin_panel
 from authorization_api import AuthorizationApi
 
 class Section(QPushButton):
@@ -163,6 +163,14 @@ class SectionsWindow(QMainWindow, QWidget):
         self.faculties_window.show()
         self.close()
 
+    
+    def switch_to_admins(self):
+        self.admins_screen = admin_panel.AdminWindow(authorization_api=self.authorization_api, previousWindow=self)
+        self.admins_screen.move(self.pos())
+        self.admins_screen.resize(self.size())
+        self.admins_screen.show()
+        self.close()
+
 
     def switch_to_edit_section(self, sect_id, sect_name, sect_img):
         self.section_edit_window = section_edit.SectionEditWindow(sect_id=sect_id, name=sect_name, filepath=sect_img, authorization_api=self.authorization_api)
@@ -242,9 +250,6 @@ class SectionsWindow(QMainWindow, QWidget):
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 26))
         self.menubar.setObjectName("menubar")
         
-        self.menu_screens = QtWidgets.QMenu(self.menubar)
-        self.menu_screens.setObjectName("menuscreens")
-        
         self.menu_modes = QtWidgets.QMenu(self.menubar)
         self.menu_modes.setObjectName("menumodes")
         
@@ -253,17 +258,6 @@ class SectionsWindow(QMainWindow, QWidget):
         self.statusbar.setObjectName("statusbar")
         self.setStatusBar(self.statusbar)
 
-        #self.sections_list_action = QtWidgets.QAction(self)
-        #self.sections_list_action.setObjectName("sectionslistaction")
-        #self.sections_list_action.triggered.connect(self.sections_list_action_triggered)
-        
-        self.section_creation = QtWidgets.QAction(self)
-        self.section_creation.setObjectName("action_2")
-        self.section_creation.triggered.connect(self.add_section_clicked)
-
-        self.article_creation = QtWidgets.QAction(self)
-        self.article_creation.setObjectName("action_3")
-        self.article_creation.triggered.connect(self.redakt_action_triggered)
         
         self.sbornic_action = QtWidgets.QAction(self)
         self.sbornic_action.setObjectName("action_4")
@@ -272,16 +266,16 @@ class SectionsWindow(QMainWindow, QWidget):
         self.faculty_action.setObjectName("action_5")
         self.faculty_action.triggered.connect(self.switch_to_faculty)
         
-        #self.menu_screens.addAction(self.sections_list_action)
-        self.menu_screens.addAction(self.section_creation)
-        self.menu_screens.addAction(self.article_creation)
+        self.admins_action = QtWidgets.QAction(self)
+        self.admins_action.setObjectName("action_6")
+        self.admins_action.triggered.connect(self.switch_to_admins)
         
         self.menu_modes.addAction(self.sbornic_action)
         self.menu_modes.addAction(self.faculty_action)
+        self.menu_modes.addAction(self.admins_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
-        #self.menubar.addAction(self.menu_screens.menuAction())
-
+        
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
 
@@ -289,13 +283,10 @@ class SectionsWindow(QMainWindow, QWidget):
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("MainWindow", "ИСП admin"))
-        self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
-        #self.sections_list_action.setText(_translate("MainWindow", "Список разделов"))
-        self.section_creation.setText(_translate("MainWindow", "Создание раздела"))
-        self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
         self.faculty_action.setText(_translate("MainWindow", "Факультет"))
+        self.admins_action.setText(_translate("MainWindow", "Админ-панель"))
 
 
         

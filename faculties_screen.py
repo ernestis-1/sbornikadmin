@@ -29,6 +29,7 @@ from faculty_api import FacultiesApi, BaseFacultyInfo
 import faculty_edit
 import global_constants
 import section_screen
+import admin_panel
 from authorization_api import AuthorizationApi
 
 
@@ -214,13 +215,21 @@ class FacultiesWindow(QMainWindow):
         self.close()
 
 
+    def switch_to_admins(self):
+        self.admins_screen = admin_panel.AdminWindow(authorization_api=self.authorization_api, previousWindow=self)
+        self.admins_screen.move(self.pos())
+        self.admins_screen.resize(self.size())
+        self.admins_screen.show()
+        self.close()
+
+
     def init_menu(self):
         self.menubar = QtWidgets.QMenuBar(self)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 26))
         self.menubar.setObjectName("menubar")
         
-        self.menu_screens = QtWidgets.QMenu(self.menubar)
-        self.menu_screens.setObjectName("menuscreens")
+        #self.menu_screens = QtWidgets.QMenu(self.menubar)
+        #self.menu_screens.setObjectName("menuscreens")
         
         self.menu_modes = QtWidgets.QMenu(self.menubar)
         self.menu_modes.setObjectName("menumodes")
@@ -230,17 +239,6 @@ class FacultiesWindow(QMainWindow):
         self.statusbar.setObjectName("statusbar")
         self.setStatusBar(self.statusbar)
 
-        #self.sections_list_action = QtWidgets.QAction(self)
-        #self.sections_list_action.setObjectName("sectionslistaction")
-        #self.sections_list_action.triggered.connect(self.sections_list_action_triggered)
-        
-        self.faculty_creation = QtWidgets.QAction(self)
-        self.faculty_creation.setObjectName("action_2")
-        self.faculty_creation.triggered.connect(self.add_faculty_clicked)
-
-        #self.article_creation = QtWidgets.QAction(self)
-        #self.article_creation.setObjectName("action_3")
-        #self.article_creation.triggered.connect(self.redakt_action_triggered)
         
         self.sbornic_action = QtWidgets.QAction(self)
         self.sbornic_action.setObjectName("action_4")
@@ -248,13 +246,15 @@ class FacultiesWindow(QMainWindow):
         
         self.faculty_action = QtWidgets.QAction(self)
         self.faculty_action.setObjectName("action_5")
-        
-        #self.menu_screens.addAction(self.sections_list_action)
-        self.menu_screens.addAction(self.faculty_creation)
-        #self.menu_screens.addAction(self.article_creation)
-        
+
+        self.admins_action = QtWidgets.QAction(self)
+        self.admins_action.setObjectName("action_6")
+        self.admins_action.triggered.connect(self.switch_to_admins)
+
+
         self.menu_modes.addAction(self.sbornic_action)
         self.menu_modes.addAction(self.faculty_action)
+        self.menu_modes.addAction(self.admins_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
         #self.menubar.addAction(self.menu_screens.menuAction())
@@ -267,13 +267,14 @@ class FacultiesWindow(QMainWindow):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("ScrollArea", "ИСП admin"))
         #self.setWindowTitle(_translate("MainWindow", "Редактирование раздела"))
-        self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
+        #self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
         #self.sections_list_action.setText(_translate("MainWindow", "Список разделов"))
-        self.faculty_creation.setText(_translate("MainWindow", "Создание факультета"))
+        #self.faculty_creation.setText(_translate("MainWindow", "Создание факультета"))
         #self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
         self.faculty_action.setText(_translate("MainWindow", "Факультет"))
+        self.admins_action.setText(_translate("MainWindow", "Админ-панель"))
 
 
 if __name__ == "__main__":

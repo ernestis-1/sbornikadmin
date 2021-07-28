@@ -90,7 +90,13 @@ class LoginWindow(QDialog):
         password = str(self.password_input.text())
         self.authorization_api.init_api(remember_me=self.remember_me, login=login, password=password)
         #print(self.authorization_api.get_token())
-        self.accept()
+        try_token = self.authorization_api.get_token()
+        if try_token:  
+            self.accept()
+        else:
+            self.login_input.clear()
+            self.password_input.clear()
+            self.label_head.setText("Ошибка! Неправильный логин или пароль")
 
     def closeEvent(self, event):
         self.reject()
