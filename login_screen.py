@@ -45,14 +45,14 @@ class LoginWindow(QDialog):
         self.label_head.setAlignment(Qt.AlignHCenter)
 
         self.label_login = QLabel()
-        self.label_login.setText("username")
+        self.label_login.setText("Логин")
         self.label_login.setFont(self.labels_font)
 
         self.login_input = QLineEdit()
         self.login_input.setFont(self.input_font)
 
         self.label_password = QLabel()
-        self.label_password.setText("password")
+        self.label_password.setText("Пароль")
         self.label_password.setFont(self.labels_font)
 
         self.password_input = QLineEdit()

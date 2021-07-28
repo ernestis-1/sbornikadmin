@@ -18,6 +18,7 @@ import requests
 from authorization_api import AuthorizationApi
 from authorization_api import UserApi, UserData
 from login_screen import LoginWindow
+from add_user_screen import EditUserWindow
 from preloader import Preloader
 import asyncio, aiohttp
 import section_screen
@@ -59,18 +60,30 @@ class User(QFrame):
         #button_edit_login.setMaximumWidth(50)
         #button_edit_login.setEnabled(False)
 
+        login_layout.addWidget(user_icon_label)
         login_layout.addWidget(login_label)
         #login_layout.addWidget(button_edit_login)
-        login_layout.addWidget(user_icon_label)
+        #login_layout.addWidget(user_icon_label)
 
-        button_edit_password = QPushButton(self)
-        button_edit_password.setText("Сменить пароль")
+        self.button_edit_password = QPushButton(self)
+        self.button_edit_password.setText("Сменить пароль")
+        self.button_edit_password.setFont(label_font)
+
+        self.button_delete = QPushButton(self)
+        self.button_delete.setIcon(QIcon("images/bin.png"))
+        self.button_delete.setMaximumWidth(60)
+        self.button_delete.clicked.connect(self.delete_clicked)
 
         #layout.addWidget(login_label)
         #layout.addWidget(button_edit_login)
         layout.addLayout(login_layout)
-        layout.addWidget(button_edit_password)
+        layout.addWidget(self.button_edit_password)
+        layout.addWidget(self.button_delete)
         #button_edit_login.setText("Изменить логин")
+    
+    def delete_clicked(self):
+        self.admin_window.delete_admin(self.user_login, self)
+        self.setEnabled(False)
 
 
 class AdminWindow(QMainWindow):
@@ -115,12 +128,12 @@ class AdminWindow(QMainWindow):
 
     def init_ui(self):
         widget = QWidget()
-        self.layout = QVBoxLayout()
-        widget.setLayout(self.layout)
+        self.scroll_layout = QVBoxLayout()
+        widget.setLayout(self.scroll_layout)
 
 
         self.preloader = Preloader()
-        self.layout.addWidget(self.preloader)
+        self.scroll_layout.addWidget(self.preloader)
         #self.layout.addWidget(Faculty(fac_name="Институт Механики, Математики и Компьютерных Наук"))
         #self.layout.addWidget(Faculty(fac_name="Мехмат"))
 
@@ -153,6 +166,7 @@ class AdminWindow(QMainWindow):
         self.add_admin_button = QPushButton("+")
         self.add_admin_button.setFont(font)
         self.add_admin_button.setMaximumWidth(100)
+        self.add_admin_button.clicked.connect(self.add_admin_clicked)
         #self.add_admin_button.clicked.connect(self.add_faculty_clicked)
 
         head_layout.addWidget(self.head_label)
@@ -181,17 +195,56 @@ class AdminWindow(QMainWindow):
             users.append(user)
         
         self.preloader.stop_loader_animation()
-        self.layout.removeWidget(self.preloader)
+        self.scroll_layout.removeWidget(self.preloader)
         self.preloader.hide()
+        self.scroll_layout.setAlignment(Qt.AlignTop)
 
         for user in users:
             #section.clicked.connect(lambda: section.edit_clicked(self))
-            self.layout.addWidget(user)
+            self.scroll_layout.addWidget(user)
 
-        self.layout.addStretch()
+        #self.scroll_layout.addStretch()
         self.admins_inited = True
 
     
+    def add_admin_clicked(self):
+        if self.admins_inited:
+            self.edit_user_window = EditUserWindow(self.authorization_api, parent=self)
+            if self.edit_user_window.exec_() == QDialog.Accepted:
+                self.admins_inited = False
+                for i in reversed(range(self.scroll_layout.count())):
+                    item = self.scroll_layout.itemAt(i)
+                    widget = item.widget()
+                    widget.setParent(None)
+                self.scroll_layout.setAlignment(Qt.AlignVCenter)
+                self.preloader.show()
+                self.preloader.start_loader_animation()
+                asyncio.ensure_future(self.init_admins())
+
+
+    def delete_admin(self, admin_login, user_widget):
+        if admin_login:
+            token = self.authorization_api.get_token()
+            if token is None:
+                self.status.showMessage("Необходимо иметь права админа для удаления")
+                return
+            headers = {"Authorization": "Bearer "+token}
+            try:
+                r = requests.delete(global_constants.USER_API+f"/{admin_login}", headers=headers)
+                if r.status_code == 200:
+                    self.scroll_layout.removeWidget(user_widget)
+                    user_widget.setParent(None)
+                    self.status.showMessage("Пользователь успешно удалён")
+                else:
+                    self.status.showMessage("Ошибка при удалении пользователя!")
+                    user_widget.setEnabled(True)
+            except Exception as e:
+                self.status.showMessage("Ошибка при удалении пользователя!")
+        else:
+            self.setEnabled(True)
+
+            
+
     def switch_to_sbornic(self):
         self.sbornic_screen = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sbornic_screen.move(self.pos())
