@@ -18,14 +18,18 @@ import sys#модуль sys(список аргументов командной
 import requests
 
 import redakt4
-import faculties_screen, faculty_edit, contacts_screen, section_screen
+import faculties_screen, faculty_edit, contacts_screen, section_screen, admin_panel
 import global_constants
+from authorization_api import AuthorizationApi
+from login_screen import LoginWindow
 
 class ContactEditorWindow(QMainWindow):
     def __init__(self, faculty_info=None,
-                    contact_id=None, contact_name=None, contact_position=None, contact_number=None, 
-                    photo_path = None, photo_url=None, contact_links=[]):
+                    contact_id=None, contact_type="Студсовет", contact_types = ["Деканат", "Студсовет", "Другое"], 
+                    contact_name=None, contact_position=None, contact_number=None, 
+                    photo_path = None, photo_url=None, contact_links=[], authorization_api=AuthorizationApi()):
         QMainWindow.__init__(self)
+        self.authorization_api = authorization_api
         self.faculty_info = faculty_info
         if self.faculty_info:
             self.fac_id = self.faculty_info.fac_id
@@ -33,6 +37,8 @@ class ContactEditorWindow(QMainWindow):
             self.fac_id = None
 
         self.contact_id = contact_id
+        self.contact_type = contact_type
+        self.contact_types = contact_types
         self.contact_name = contact_name
         self.contact_position = contact_position
         self.photo_path = photo_path
@@ -46,6 +52,7 @@ class ContactEditorWindow(QMainWindow):
         self.status = QStatusBar()
         self.setStatusBar(self.status)
         self.resize(800, 450)
+
 
     def init_ui(self):
         main_main_layout = QVBoxLayout()
@@ -68,28 +75,44 @@ class ContactEditorWindow(QMainWindow):
         self.font_lines.setPointSize(12)
 
         self.label_name = QtWidgets.QLabel()
-        #self.label_name.setGeometry(QtCore.QRect(470, 30, 181, 20))
         self.label_name.setObjectName("label_name")
         self.label_name.setFont(font_labels)
 
         self.lineEdit_name = QtWidgets.QLineEdit()
-        #self.lineEdit_name.setGeometry(QtCore.QRect(470, 60, 311, 21))
         self.lineEdit_name.setObjectName("lineEdit")
         self.lineEdit_name.setFont(self.font_lines)
         if self.contact_name:
             self.lineEdit_name.setText(self.contact_name)
+        self.lineEdit_name.setCursorPosition(0)
+
+        #group_layout = QHBoxLayout()
+        #group_layout.setAlignment(Qt.AlignLeft)
+
+        self.label_group = QLabel()
+        self.label_group.setObjectName("label_group")
+        self.label_group.setFont(font_labels)
+
+        self.group_combobox = QComboBox()
+        self.group_combobox_items = self.contact_types
+        self.group_combobox.addItems(self.group_combobox_items)
+        self.group_combobox.setCurrentText(self.contact_type) 
+        self.group_combobox.setFont(self.font_lines)
+        #self.type_combobox.setCurrentIndex(self.fac_type)
+
+        #group_layout.addWidget(self.label_group)
+        #group_layout.addWidget(self.group_combobox)
+        
 
         self.label_phone_number = QtWidgets.QLabel()
-        #self.label__phone_number.setGeometry(QtCore.QRect(470, 100, 181, 16))
         self.label_phone_number.setObjectName("label_phone_number")
         self.label_phone_number.setFont(font_labels)
 
         self.lineEdit_phone_number = QtWidgets.QLineEdit()
-        #self.lineEdit_phone_number.setGeometry(QtCore.QRect(470, 130, 311, 21))
         self.lineEdit_phone_number.setObjectName("lineEdit_phone_number")
         self.lineEdit_phone_number.setFont(self.font_lines)
         if self.contact_number:
             self.lineEdit_phone_number.setText(self.contact_number)
+        self.lineEdit_phone_number.setCursorPosition(0)
         
         self.label_position = QtWidgets.QLabel()
         #self.label_position.setGeometry(QtCore.QRect(470, 170, 211, 16))
@@ -102,6 +125,7 @@ class ContactEditorWindow(QMainWindow):
         self.lineEdit_position.setFont(self.font_lines)
         if self.contact_position:
             self.lineEdit_position.setText(self.contact_position)
+        self.lineEdit_position.setCursorPosition(0)
 
         links_widget = QWidget()
         self.links_layout = QVBoxLayout()
@@ -143,6 +167,10 @@ class ContactEditorWindow(QMainWindow):
 
         self.labels_layout.addWidget(self.label_name)
         self.labels_layout.addWidget(self.lineEdit_name)
+
+        self.labels_layout.addWidget(self.label_group)
+        self.labels_layout.addWidget(self.group_combobox)
+        #self.labels_layout.addLayout(group_layout)
 
         self.labels_layout.addWidget(self.label_position)
         self.labels_layout.addWidget(self.lineEdit_position)
@@ -259,6 +287,7 @@ class ContactEditorWindow(QMainWindow):
         #pixmap = QPixmap(file_name)
         self.label_image.setPixmap(background)
 
+
     def add_link(self):
         lineEdit_link = QtWidgets.QLineEdit()
         lineEdit_link.setFont(self.font_lines)
@@ -285,27 +314,47 @@ class ContactEditorWindow(QMainWindow):
 
     def add_faculty_clicked(self):
         #print("clicked!")
-        self.faculty_edit_window = faculty_edit.FacultyEditWindow()
+        self.faculty_edit_window = faculty_edit.FacultyEditWindow(authorization_api=self.authorization_api)
         self.faculty_edit_window.move(self.pos())
         self.faculty_edit_window.resize(self.size())
-        self.faculty_edit_window.show()
+        if self.isMaximized():
+            self.faculties_window.showMaximized()
+        else:
+            self.faculty_edit_window.show()
         self.close()
         #self.destroy()
 
 
     def switch_to_sbornic(self):
-        self.sbornic_screen = section_screen.SectionsWindow()
+        self.sbornic_screen = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sbornic_screen.move(self.pos())
         self.sbornic_screen.resize(self.size())
-        self.sbornic_screen.show()
+        if self.isMaximized():
+            self.sbornic_screen.showMaximized()
+        else:
+            self.sbornic_screen.show()
+        self.close()
+
+    
+    def switch_to_admins(self):
+        self.admins_screen = admin_panel.AdminWindow(authorization_api=self.authorization_api, previousWindow=self)
+        self.admins_screen.move(self.pos())
+        self.admins_screen.resize(self.size())
+        if self.isMaximized():
+            self.admins_screen.showMaximized()
+        else:
+            self.admins_screen.show()
         self.close()
 
 
     def faculties_list_action_triggered(self):
-        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
-        self.faculties_window.show()
+        if self.isMaximized():
+            self.faculties_window.showMaximized()
+        else:
+            self.faculties_window.show()
         self.close()
 
 
@@ -313,10 +362,13 @@ class ContactEditorWindow(QMainWindow):
         if self.fac_id is None:
             return
         self.button_back.setEnabled(False)
-        self.contacts_window = contacts_screen.ContactsWindow(faculty_info=self.faculty_info)
+        self.contacts_window = contacts_screen.ContactsWindow(faculty_info=self.faculty_info, authorization_api=self.authorization_api)
         self.contacts_window.move(self.pos())
         self.contacts_window.resize(self.size())
-        self.contacts_window.show()
+        if self.isMaximized():
+            self.contacts_window.showMaximized()
+        else:
+            self.contacts_window.show()
         self.close()
 
 
@@ -337,9 +389,19 @@ class ContactEditorWindow(QMainWindow):
     def delete_contact(self):
         if self.contact_id is None:
             return
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
         #payload = {'id': self.sect_id}
         try:
-            r = requests.delete(global_constants.CONTACTS_API+f"/{self.contact_id}")
+            r = requests.delete(global_constants.CONTACTS_API+f"/{self.contact_id}", headers=headers)
             if (r.status_code == 200):
                 self.status.showMessage("Контакт удалён!")
                 self.back_to_contacts()
@@ -363,12 +425,23 @@ class ContactEditorWindow(QMainWindow):
     def edit_contact(self):
         #print("edit section")
         #s = self.button_create.text()
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
         if self.contact_id is None:
             self.button_edit.setText("Отправить изменения")
             try:
                 #print(self.line_input_head.text())
                 j = {
                         "facultyId": self.fac_id,
+                        "type": self.group_combobox.currentText(),
                         "name": self.lineEdit_name.text(),
                         "position": self.lineEdit_position.text(),
                         "phoneNumber": self.lineEdit_phone_number.text(),
@@ -379,7 +452,7 @@ class ContactEditorWindow(QMainWindow):
                     self.photo_url = redakt4.get_photo_uri(self.photo_path)
                     j["photo"] = self.photo_url
                 #print(j)
-                r = requests.post(global_constants.CONTACTS_API, json=j)
+                r = requests.post(global_constants.CONTACTS_API, json=j, headers=headers)
                 if (r.status_code == 200):
                     self.status.showMessage("Контакт создан!")
                     #print(r.json())
@@ -397,6 +470,7 @@ class ContactEditorWindow(QMainWindow):
             j = {
                     "id": self.contact_id,
                     "facultyId": self.fac_id,
+                    "type": self.group_combobox.currentText(),
                     "name": self.lineEdit_name.text(),
                     "position": self.lineEdit_position.text(),
                     "phoneNumber": self.lineEdit_phone_number.text(),
@@ -415,7 +489,7 @@ class ContactEditorWindow(QMainWindow):
                 else:
                     pass
             try:
-                r = requests.put(global_constants.CONTACTS_API, json=j)
+                r = requests.put(global_constants.CONTACTS_API, json=j, headers=headers)
                 if (r.status_code == 200):
                     self.status.showMessage("Изменения отправлены!")
                     #print(r.json())
@@ -433,9 +507,6 @@ class ContactEditorWindow(QMainWindow):
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 26))
         self.menubar.setObjectName("menubar")
         
-        self.menu_screens = QtWidgets.QMenu(self.menubar)
-        self.menu_screens.setObjectName("menuscreens")
-        
         self.menu_modes = QtWidgets.QMenu(self.menubar)
         self.menu_modes.setObjectName("menumodes")
         
@@ -443,22 +514,6 @@ class ContactEditorWindow(QMainWindow):
         #self.statusbar = QtWidgets.QStatusBar(self)
         #self.statusbar.setObjectName("statusbar")
         #self.setStatusBar(self.statusbar)
-
-        self.faculties_list_action = QtWidgets.QAction(self)
-        self.faculties_list_action.setObjectName("sectionslistaction")
-        self.faculties_list_action.triggered.connect(self.faculties_list_action_triggered)
-        
-        self.faculty_creation = QtWidgets.QAction(self)
-        self.faculty_creation.setObjectName("action_2")
-        self.faculty_creation.triggered.connect(self.add_faculty_clicked)
-
-        self.contacts_action = QtWidgets.QAction(self)
-        self.contacts_action.setObjectName("contacts_action")
-        self.contacts_action.triggered.connect(self.back_to_contacts)
-
-        #self.article_creation = QtWidgets.QAction(self)
-        #self.article_creation.setObjectName("action_3")
-        #self.article_creation.triggered.connect(self.redakt_action_triggered)
         
         self.sbornic_action = QtWidgets.QAction(self)
         self.sbornic_action.setObjectName("action_4")
@@ -467,12 +522,13 @@ class ContactEditorWindow(QMainWindow):
         self.faculty_action = QtWidgets.QAction(self)
         self.faculty_action.setObjectName("action_5")
         
-        self.menu_screens.addAction(self.faculties_list_action)
-        self.menu_screens.addAction(self.faculty_creation)
-        self.menu_screens.addAction(self.contacts_action)
+        self.admins_action = QtWidgets.QAction(self)
+        self.admins_action.setObjectName("action_6")
+        self.admins_action.triggered.connect(self.switch_to_admins)
         
         self.menu_modes.addAction(self.sbornic_action)
         self.menu_modes.addAction(self.faculty_action)
+        self.menu_modes.addAction(self.admins_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
         #self.menubar.addAction(self.menu_screens.menuAction())
@@ -485,20 +541,17 @@ class ContactEditorWindow(QMainWindow):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("MainWindow", "ИСП admin"))
         self.label_name.setText(_translate("MainWindow", "Имя контакта:"))
+        self.label_group.setText(_translate("MainWindow", "Группа контакта:"))
         self.label_phone_number.setText(_translate("MainWindow", "Телефон контакта:"))
         self.label_position.setText(_translate("MainWindow", "Должность контакта:"))
         #self.attach_button.setText(_translate("MainWindow", "<Прикрепите фото контакта>"))
         #self.pushButton.clicked.connect(self._on_open_image)
         self.button_add.setText(_translate("MainWindow", "+"))
         self.label_links.setText(_translate("MainWindow", "Ссылки:"))
-        #self.setWindowTitle(_translate("MainWindow", "Редактирование раздела"))
-        self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
-        self.faculties_list_action.setText(_translate("MainWindow", "Список факультетов"))
-        self.faculty_creation.setText(_translate("MainWindow", "Создание факультета"))
-        self.contacts_action.setText(_translate("MainWindow", "Контакты факультета"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
         self.faculty_action.setText(_translate("MainWindow", "Факультет"))
+        self.admins_action.setText(_translate("MainWindow", "Админ-панель"))
 
 
 if __name__ == "__main__":

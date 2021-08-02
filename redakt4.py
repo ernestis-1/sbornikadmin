@@ -23,16 +23,20 @@ import uuid
 
 import section_screen
 import section_edit
-import faculties_screen
+import faculties_screen, admin_panel
 import global_constants
 from sections_api import FullArticleInfo, ArticleApi
 from preloader import Preloader
+from authorization_api import AuthorizationApi
+from login_screen import LoginWindow
 
 
 class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
-    def __init__(self, article_id=None, parent_id=9, article_name=None, sect_name=None, sect_img_path=None, sect_img_url=None):
+    def __init__(self, article_id=None, parent_id=9, article_name=None, sect_name=None, sect_img_path=None, sect_img_url=None,
+            authorization_api=AuthorizationApi()):
         super(EditorWindow, self).__init__()
+        self.authorization_api = authorization_api
         self.resize(800,600)
         self.setWindowTitle("ИСП admin")
         self.is_keep_path = False
@@ -124,6 +128,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.label_nazv.setFont(fixedfontnazv)
         if self.article_name:
             self.label_nazv.setText(self.article_name)
+        self.label_nazv.setCursorPosition(0)
         layout.addWidget(self.label_nazv)
         
         self.editor = QTextEdit()  # QPlainTextEdit 
@@ -295,20 +300,26 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
 
     def sections_list_action_triggered(self):
-        self.sections_window = section_screen.SectionsWindow()
+        self.sections_window = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sections_window.move(self.pos())
         self.sections_window.resize(self.size())
-        self.sections_window.show()
+        if self.isMaximized():
+            self.sections_window.showMaximized()
+        else:
+            self.sections_window.show()
         self.close()
         #self.destroy()
 
     
     def section_edit_action_triggered(self):
         #print("clicked!")
-        self.section_edit_window = section_edit.SectionEditWindow()
+        self.section_edit_window = section_edit.SectionEditWindow(authorization_api=self.authorization_api)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
-        self.section_edit_window.show()
+        if self.isMaximized():
+            self.section_edit_window.showMaximized()
+        else:
+            self.section_edit_window.show()
         self.close()
         #self.destroy()
 
@@ -316,20 +327,38 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
     def back_to_section_edit(self):
         #print("clicked!")
         self.is_keep_path = True
-        self.section_edit_window = section_edit.SectionEditWindow(self.sect_id, self.sect_name, self.sect_img_path, self.sect_img_url)
+        self.section_edit_window = section_edit.SectionEditWindow(self.sect_id, self.sect_name, self.sect_img_path, self.sect_img_url,
+                authorization_api=self.authorization_api)
         self.button_back.setEnabled(False)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
-        self.section_edit_window.show()
+        if self.isMaximized():
+            self.section_edit_window.showMaximized()
+        else:
+            self.section_edit_window.show()
         self.close()
         #self.destroy()
 
     
     def switch_to_faculty(self):
-        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
-        self.faculties_window.show()
+        if self.isMaximized():
+            self.faculties_window.showMaximized()
+        else:
+            self.faculties_window.show()
+        self.close()
+
+
+    def switch_to_admins(self):
+        self.admins_screen = admin_panel.AdminWindow(authorization_api=self.authorization_api, previousWindow=self)
+        self.admins_screen.move(self.pos())
+        self.admins_screen.resize(self.size())
+        if self.isMaximized():
+            self.admins_screen.showMaximized()
+        else:
+            self.admins_screen.show()
         self.close()
 
 
@@ -337,9 +366,6 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.menubar = QtWidgets.QMenuBar(self)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 26))
         self.menubar.setObjectName("menubar")
-        
-        self.menu_screens = QtWidgets.QMenu(self.menubar)
-        self.menu_screens.setObjectName("menuscreens")
         
         self.menu_modes = QtWidgets.QMenu(self.menubar)
         self.menu_modes.setObjectName("menumodes")
@@ -349,17 +375,6 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.statusbar.setObjectName("statusbar")
         self.setStatusBar(self.statusbar)
 
-        self.sections_list_action = QtWidgets.QAction(self)
-        self.sections_list_action.setObjectName("sectionslistaction")
-        self.sections_list_action.triggered.connect(self.sections_list_action_triggered)
-        
-        self.section_creation = QtWidgets.QAction(self)
-        self.section_creation.setObjectName("action_2")
-        self.section_creation.triggered.connect(self.section_edit_action_triggered)
-
-        #self.article_creation = QtWidgets.QAction(self)
-        #self.article_creation.setObjectName("action_3")
-        #self.article_creation.triggered.connect(self.redakt_action_triggered)
         
         self.sbornic_action = QtWidgets.QAction(self)
         self.sbornic_action.setObjectName("action_4")
@@ -368,15 +383,16 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.faculty_action.setObjectName("action_5")
         self.faculty_action.triggered.connect(self.switch_to_faculty)
 
-        self.menu_screens.addAction(self.sections_list_action)
-        self.menu_screens.addAction(self.section_creation)
-        #self.menu_screens.addAction(self.article_creation)
+        self.admins_action = QtWidgets.QAction(self)
+        self.admins_action.setObjectName("action_6")
+        self.admins_action.triggered.connect(self.switch_to_admins)
+
         
         self.menu_modes.addAction(self.sbornic_action)
         self.menu_modes.addAction(self.faculty_action)
+        self.menu_modes.addAction(self.admins_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
-        #self.menubar.addAction(self.menu_screens.menuAction())
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -385,13 +401,10 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("MainWindow", "ИСП admin"))
-        self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
-        self.sections_list_action.setText(_translate("MainWindow", "Список разделов"))
-        self.section_creation.setText(_translate("MainWindow", "Создание раздела"))
-        #self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
         self.faculty_action.setText(_translate("MainWindow", "Факультет"))
+        self.admins_action.setText(_translate("MainWindow", "Админ-панель"))
 
 
     def dialog_critical(self, s):#обработка MessageBox
@@ -558,7 +571,17 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
 
 #функция для отправления все на сервер
     def edit_article_event(self):
-        print("edit article")
+        #print("edit article")
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
         if self.photo_urls_list is None:
             self.photo_urls_list = []
         for filename in self.new_photoes:
@@ -579,7 +602,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
                 }
             url = global_constants.ARTICLE_API
             try:
-                res = requests.put(url, json=j)
+                res = requests.put(url, json=j, headers=headers)
                 self.status.showMessage("Статья отправлена")
                 
             except Exception as e:
@@ -594,7 +617,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
                 }
             url = global_constants.ARTICLE_API
             try:
-                res = requests.post(url, json=j)
+                res = requests.post(url, json=j, headers=headers)
                 self.status.showMessage("Статья отправлена")
                 self.button_edit_article.setText("Отправить изменения")
                 self.article_id = res.json()['id']
@@ -606,9 +629,19 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
     def delete_article(self):
         if self.article_id is None:
             return
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
         #payload = {'id': self.sect_id}
         try:
-            r = requests.delete(global_constants.ARTICLE_API+f"/{self.article_id}")
+            r = requests.delete(global_constants.ARTICLE_API+f"/{self.article_id}", headers=headers)
             if (r.status_code == 200):
                 self.status.showMessage("Статья удалена!")
                 #self.sections_list_action_triggered()

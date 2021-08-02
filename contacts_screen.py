@@ -19,15 +19,17 @@ from sections_api import get_image_path_from_url
 import faculty_edit
 import faculties_screen
 import global_constants
-import section_screen
+import section_screen, admin_panel
 import contact_edit
+from authorization_api import AuthorizationApi
 
 class Contact(QPushButton):
-    def __init__(self, contact_id=None, contact_name=None, contact_position=None, photo_url=None, 
+    def __init__(self, contact_id=None, contact_type=None, contact_name=None, contact_position=None, photo_url=None, 
                     photo_path="images/attach.png", contact_number=None,
             contact_links=None, contacts_window=None):
         QWidget.__init__(self)
         self.contact_id = contact_id
+        self.contact_type = contact_type
         self.contact_name = contact_name
         self.contact_position = contact_position
         self.contact_number = contact_number
@@ -82,14 +84,16 @@ class Contact(QPushButton):
         if self.contacts_window:
             self.setEnabled(False)
             self.contacts_window.forbidDeletion(self.photo_path)
-            self.contacts_window.open_contact_edit(self.contact_id, self.contact_name, self.contact_position, self.contact_number,
+            self.contacts_window.open_contact_edit(self.contact_id, self.contact_type, self.contact_name, 
+                self.contact_position, self.contact_number,
                 self.photo_path, self.photo_url, self.contact_links)
 
 
 class ContactsWindow(QMainWindow):
-    def __init__(self, faculty_info=None):
+    def __init__(self, faculty_info=None, authorization_api=AuthorizationApi()):
         QMainWindow.__init__(self)
         self.resize(800,600)
+        self.authorization_api = authorization_api
         self.faculty_info = faculty_info
         if self.faculty_info:
             self.fac_id = faculty_info.fac_id
@@ -102,7 +106,9 @@ class ContactsWindow(QMainWindow):
             self.fac_info = None
             self.fac_img_url = None
         self.contacts_inited = False
-        self.api = FacultiesApi(global_constants.FACULTIES_API, global_constants.FACULTIES_INFO_API, global_constants.FACULTIES_INFO_ID)
+        self.contact_types = None
+        self.api = FacultiesApi(global_constants.FACULTIES_API, global_constants.FACULTIES_INFO_API, 
+                    global_constants.FACULTIES_INFO_ID, global_constants.CONTACT_TYPES_API)
         self.setWindowTitle("Контакты")
         self.init_ui()
         self.init_menu()
@@ -138,6 +144,7 @@ class ContactsWindow(QMainWindow):
         if (self.fac_name is None) and (self.fac_id is None):
             return
         contacts = await self.api.get_faculty_info(self.fac_id, self.fac_name)
+        self.contact_types = await self.api.get_contacts_types(self.fac_id) #for contact_edit window
         urls = []
         for contact in contacts:
             urls.append(contact.img_url)
@@ -150,8 +157,9 @@ class ContactsWindow(QMainWindow):
         for i in range(0, len(contacts)):
             cont_info = contacts[i]
             if img_paths[i]:
-                contact_widget = Contact(cont_info.cont_id, cont_info.name, cont_info.position, cont_info.img_url, img_paths[i]
-                    , cont_info.phone_number, cont_info.links, contacts_window=self)
+                contact_widget = Contact(cont_info.cont_id, cont_info.cont_type, cont_info.name, cont_info.position, 
+                    cont_info.img_url, img_paths[i],
+                    cont_info.phone_number, cont_info.links, contacts_window=self)
             else:
                 contact_widget = Contact(cont_info.cont_id, cont_info.name, cont_info.position, cont_info.img_url, 
                                 contact_number=cont_info.phone_number, contact_links=cont_info.links, contacts_window=self)
@@ -256,10 +264,13 @@ class ContactsWindow(QMainWindow):
 
     def add_faculty_clicked(self):
         #print("clicked!")
-        self.faculty_edit_window = faculty_edit.FacultyEditWindow()
+        self.faculty_edit_window = faculty_edit.FacultyEditWindow(authorization_api=self.authorization_api)
         self.faculty_edit_window.move(self.pos())
         self.faculty_edit_window.resize(self.size())
-        self.faculty_edit_window.show()
+        if self.isMaximized():
+            self.faculty_edit_window.showMaximized()
+        else:
+            self.faculty_edit_window.show()
         self.close()
         #self.destroy()
 
@@ -270,45 +281,74 @@ class ContactsWindow(QMainWindow):
 
 
     def switch_to_edit_faculty(self, faculty_info=None):
-        self.section_edit_window = faculty_edit.FacultyEditWindow(faculty_info=faculty_info)
-        self.section_edit_window.move(self.pos())
-        self.section_edit_window.resize(self.size())
-        self.section_edit_window.show()
+        self.faculty_edit_window = faculty_edit.FacultyEditWindow(faculty_info=faculty_info, authorization_api=self.authorization_api)
+        self.faculty_edit_window.move(self.pos())
+        self.faculty_edit_window.resize(self.size())
+        if self.isMaximized():
+            self.faculty_edit_window.showMaximized()
+        else:
+            self.faculty_edit_window.show()
         self.close()
 
 
     def switch_to_sbornic(self):
-        self.sbornic_screen = section_screen.SectionsWindow()
+        self.sbornic_screen = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sbornic_screen.move(self.pos())
         self.sbornic_screen.resize(self.size())
-        self.sbornic_screen.show()
+        if self.isMaximized():
+            self.sbornic_screen.showMaximized()
+        else:
+            self.sbornic_screen.show()
+        self.close()
+
+
+    def switch_to_admins(self):
+        self.admins_screen = admin_panel.AdminWindow(authorization_api=self.authorization_api, previousWindow=self)
+        self.admins_screen.move(self.pos())
+        self.admins_screen.resize(self.size())
+        if self.isMaximized():
+            self.admins_screen.showMaximized()
+        else:
+            self.admins_screen.show()
         self.close()
 
 
     def faculties_list_action_triggered(self):
-        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
-        self.faculties_window.show()
+        if self.isMaximized():
+            self.faculties_window.showMaximized()
+        else:
+            self.faculties_window.show()
         self.close()
     
 
     def add_contact_clicked(self):
-        self.contact_window = contact_edit.ContactEditorWindow(faculty_info=self.faculty_info)
+        self.contact_window = contact_edit.ContactEditorWindow(faculty_info=self.faculty_info, contact_types=self.contact_types,
+                authorization_api=self.authorization_api)
         self.contact_window.move(self.pos())
         self.contact_window.resize(self.size())
-        self.contact_window.show()
+        if self.isMaximized():
+            self.contact_window.showMaximized()
+        else:
+            self.contact_window.show()
         self.close()
 
 
-    def open_contact_edit(self, contact_id, contact_name, contact_position, contact_number, photo_path, photo_url, contact_links):
+    def open_contact_edit(self, contact_id, contact_type, contact_name, contact_position, 
+                contact_number, photo_path, photo_url, contact_links):
         #print(photo_path)
         self.contact_window = contact_edit.ContactEditorWindow(self.faculty_info,
-                contact_id, contact_name, contact_position, contact_number, 
-                photo_path, photo_url, contact_links)
+                contact_id, contact_type, self.contact_types, contact_name, contact_position, contact_number, 
+                photo_path, photo_url, contact_links,
+                authorization_api=self.authorization_api)
         self.contact_window.move(self.pos())
         self.contact_window.resize(self.size())
-        self.contact_window.show()
+        if self.isMaximized():
+            self.contact_window.showMaximized()
+        else:
+            self.contact_window.show()
         self.close()
 
 
@@ -316,9 +356,6 @@ class ContactsWindow(QMainWindow):
         self.menubar = QtWidgets.QMenuBar(self)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 26))
         self.menubar.setObjectName("menubar")
-        
-        self.menu_screens = QtWidgets.QMenu(self.menubar)
-        self.menu_screens.setObjectName("menuscreens")
         
         self.menu_modes = QtWidgets.QMenu(self.menubar)
         self.menu_modes.setObjectName("menumodes")
@@ -328,17 +365,6 @@ class ContactsWindow(QMainWindow):
         self.statusbar.setObjectName("statusbar")
         self.setStatusBar(self.statusbar)
 
-        self.faculties_list_action = QtWidgets.QAction(self)
-        self.faculties_list_action.setObjectName("sectionslistaction")
-        self.faculties_list_action.triggered.connect(self.faculties_list_action_triggered)
-        
-        self.faculty_creation = QtWidgets.QAction(self)
-        self.faculty_creation.setObjectName("action_2")
-        self.faculty_creation.triggered.connect(self.add_faculty_clicked)
-
-        #self.article_creation = QtWidgets.QAction(self)
-        #self.article_creation.setObjectName("action_3")
-        #self.article_creation.triggered.connect(self.redakt_action_triggered)
         
         self.sbornic_action = QtWidgets.QAction(self)
         self.sbornic_action.setObjectName("action_4")
@@ -346,16 +372,17 @@ class ContactsWindow(QMainWindow):
         
         self.faculty_action = QtWidgets.QAction(self)
         self.faculty_action.setObjectName("action_5")
+
+        self.admins_action = QtWidgets.QAction(self)
+        self.admins_action.setObjectName("action_6")
+        self.admins_action.triggered.connect(self.switch_to_admins)
         
-        self.menu_screens.addAction(self.faculties_list_action)
-        self.menu_screens.addAction(self.faculty_creation)
-        #self.menu_screens.addAction(self.article_creation)
         
         self.menu_modes.addAction(self.sbornic_action)
         self.menu_modes.addAction(self.faculty_action)
+        self.menu_modes.addAction(self.admins_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
-        #self.menubar.addAction(self.menu_screens.menuAction())
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -364,14 +391,10 @@ class ContactsWindow(QMainWindow):
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("ScrollArea", "ИСП admin"))
-        #self.setWindowTitle(_translate("MainWindow", "Редактирование раздела"))
-        self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
-        self.faculties_list_action.setText(_translate("MainWindow", "Список факультетов"))
-        self.faculty_creation.setText(_translate("MainWindow", "Создание факультета"))
-        #self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
         self.faculty_action.setText(_translate("MainWindow", "Факультет"))
+        self.admins_action.setText(_translate("MainWindow", "Админ-панель"))
 
 
 if __name__ == "__main__":

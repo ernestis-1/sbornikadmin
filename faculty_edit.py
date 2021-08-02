@@ -1,4 +1,6 @@
 #работа с библиотекой PyQt5.QtGui(виджеты и прочее)
+from requests.api import head
+from faculty_api import BaseFacultyInfo
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -25,17 +27,52 @@ import uuid
 from preloader import Preloader
 from sections_api import get_image_path_from_url
 import global_constants
-import section_screen, faculties_screen
+import section_screen, faculties_screen, admin_panel
 import redakt4
 import contacts_screen
+from authorization_api import AuthorizationApi
+from login_screen import LoginWindow
+
+class LinkWidget(QWidget):
+    def __init__(self, link_text=None, img_path=None):
+        QWidget.__init__(self)
+        self.link_text = link_text
+        self.img_path = img_path
+        self.init_ui()
+
+    def init_ui(self):
+        main_layout = QHBoxLayout()
+        self.setLayout(main_layout)
+        
+        self.label_icon = QLabel(self)
+        icon_size = 25
+        pixmap = QPixmap(self.img_path).scaled(icon_size, icon_size)
+        self.label_icon.setPixmap(pixmap)
+
+        font = QFont()
+        font.setPointSize(10)
+
+        self.line_input = QLineEdit()
+        self.line_input.setFont(font)
+        if self.link_text:
+            self.line_input.setText(self.link_text)
+
+        main_layout.addWidget(self.label_icon)
+        main_layout.addWidget(self.line_input)
+    
+    def get_text(self):
+        return str(self.line_input.text())
+
 
 
 class FacultyEditWindow(QMainWindow):
-    def __init__(self, faculty_info=None):
+    def __init__(self, faculty_info=None, faculty_types=None, authorization_api=AuthorizationApi()):
         super().__init__()
         self.resize(800, 600)
         self.setWindowTitle("ИСП admin")
         self.faculty_info = faculty_info
+        self.faculty_types = faculty_types
+        self.authorization_api = authorization_api
         if self.faculty_info:
             self.fac_id = faculty_info.fac_id
             self.fac_name = faculty_info.fac_name
@@ -43,6 +80,11 @@ class FacultyEditWindow(QMainWindow):
             self.fac_type = faculty_info.fac_type
             self.fac_info = faculty_info.info
             self.img_url = faculty_info.img_url
+            self.phone_number_text = faculty_info.phone_number
+            self.website_link_text = faculty_info.website_link
+            self.vk_link_text = faculty_info.vk_link
+            self.instagram_link_text = faculty_info.instagram_link
+            self.facebook_link_text = faculty_info.facebook_link
         else:
             self.fac_id = None
             self.fac_name = None
@@ -50,6 +92,11 @@ class FacultyEditWindow(QMainWindow):
             self.fac_type = 0
             self.fac_info = None
             self.img_url = None
+            self.phone_number_text = None
+            self.website_link_text = None
+            self.vk_link_text = None
+            self.instagram_link_text = None
+            self.facebook_link_text = None
         self.img_path = None
         if (self.img_url is None) or (self.img_url==""):
             self.init_ui()
@@ -81,7 +128,7 @@ class FacultyEditWindow(QMainWindow):
 
     
     def showEvent(self, event):
-        if (self.img_url):
+        if self.img_url:
             asyncio.ensure_future(self.init_content())
 
         
@@ -147,9 +194,12 @@ class FacultyEditWindow(QMainWindow):
         
         combobox_label = QLabel()
         combobox_label.setText("Тип СП")
-        combobox_label.setFont(mid_font)
+        #combobox_label.setFont(mid_font)
+        combobox_label.setFont(head_font)
         self.type_combobox = QComboBox()
         self.type_combobox_items = ["Структурное подразделение", "Факультет","Академия", "Институт"]
+        if (self.faculty_types):
+            self.type_combobox_items = self.faculty_types
         self.type_combobox.addItems(self.type_combobox_items) 
         self.type_combobox.setFont(mid_font)
         self.type_combobox.setCurrentIndex(self.fac_type)
@@ -163,7 +213,8 @@ class FacultyEditWindow(QMainWindow):
         
         abbreviation_label = QLabel()
         abbreviation_label.setText("Сокращенное название")
-        abbreviation_label.setFont(mid_font)
+        #abbreviation_label.setFont(mid_font)
+        abbreviation_label.setFont(head_font)
         self.abbreviation_input = QLineEdit()
         self.abbreviation_input.setFont(mid_font)
         if self.abbreviation:
@@ -177,9 +228,32 @@ class FacultyEditWindow(QMainWindow):
         mid_fields_layout.addLayout(abbreviation_layout)
         self.title_layout.addLayout(mid_fields_layout)
 
-
+        self.label_links = QLabel()
+        self.label_links.setFont(head_font)
+        self.label_links.setText("Ссылки")
+        self.title_layout.addWidget(self.label_links)
         
+        self.links_layout = QHBoxLayout()
+        self.left_links_layout = QVBoxLayout()
+        self.left_links_layout.setAlignment(Qt.AlignTop)
+        self.right_links_layout = QVBoxLayout()
+        self.right_links_layout.setAlignment(Qt.AlignTop)
 
+        self.vk_link = LinkWidget(self.vk_link_text, "images/VK.png")
+        self.left_links_layout.addWidget(self.vk_link)
+        self.instagram_link = LinkWidget(self.instagram_link_text, "images/Instagram.png")
+        self.left_links_layout.addWidget(self.instagram_link)
+        self.facebook_link = LinkWidget(self.facebook_link_text, "images/Facebook.png")
+        self.left_links_layout.addWidget(self.facebook_link)
+
+        self.telephone_link = LinkWidget(self.phone_number_text, "images/phone.png")
+        self.right_links_layout.addWidget(self.telephone_link)
+        self.website_link = LinkWidget(self.website_link_text, "images/domain.png")
+        self.right_links_layout.addWidget(self.website_link)
+
+        self.links_layout.addLayout(self.left_links_layout)
+        self.links_layout.addLayout(self.right_links_layout)
+        self.title_layout.addLayout(self.links_layout)
 
         self.label_image = QLabel()
         self.label_image.setScaledContents(True)
@@ -316,9 +390,6 @@ class FacultyEditWindow(QMainWindow):
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 26))
         self.menubar.setObjectName("menubar")
         
-        self.menu_screens = QtWidgets.QMenu(self.menubar)
-        self.menu_screens.setObjectName("menuscreens")
-        
         self.menu_modes = QtWidgets.QMenu(self.menubar)
         self.menu_modes.setObjectName("menumodes")
         
@@ -327,17 +398,6 @@ class FacultyEditWindow(QMainWindow):
         self.statusbar.setObjectName("statusbar")
         self.setStatusBar(self.statusbar)
 
-        self.faculties_list_action = QtWidgets.QAction(self)
-        self.faculties_list_action.setObjectName("sectionslistaction")
-        self.faculties_list_action.triggered.connect(self.faculties_list_action_triggered)
-        
-        self.faculty_creation = QtWidgets.QAction(self)
-        self.faculty_creation.setObjectName("action_2")
-        #self.faculty_creation.triggered.connect(self.add_faculty_clicked)
-
-        #self.article_creation = QtWidgets.QAction(self)
-        #self.article_creation.setObjectName("action_3")
-        #self.article_creation.triggered.connect(self.redakt_action_triggered)
         
         self.sbornic_action = QtWidgets.QAction(self)
         self.sbornic_action.setObjectName("action_4")
@@ -345,16 +405,17 @@ class FacultyEditWindow(QMainWindow):
         
         self.faculty_action = QtWidgets.QAction(self)
         self.faculty_action.setObjectName("action_5")
+
+        self.admins_action = QtWidgets.QAction(self)
+        self.admins_action.setObjectName("action_6")
+        self.admins_action.triggered.connect(self.switch_to_admins)
         
-        self.menu_screens.addAction(self.faculties_list_action)
-        #self.menu_screens.addAction(self.faculty_creation)
-        #self.menu_screens.addAction(self.article_creation)
         
         self.menu_modes.addAction(self.sbornic_action)
         self.menu_modes.addAction(self.faculty_action)
+        self.menu_modes.addAction(self.admins_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
-        #self.menubar.addAction(self.menu_screens.menuAction())
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -363,30 +424,43 @@ class FacultyEditWindow(QMainWindow):
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("ScrollArea", "ИСП admin"))
-        #self.setWindowTitle(_translate("MainWindow", "Редактирование раздела"))
-        self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
-        self.faculties_list_action.setText(_translate("MainWindow", "Список факультетов"))
-        self.faculty_creation.setText(_translate("MainWindow", "Создание факультета"))
-        #self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
         self.faculty_action.setText(_translate("MainWindow", "Факультет"))
+        self.admins_action.setText(_translate("MainWindow", "Админ-панель"))
 
 
     def faculties_list_action_triggered(self):
-        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.button_back.setEnabled(False)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
-        self.faculties_window.show()
+        if self.isMaximized():
+            self.faculties_window.showMaximized()
+        else:
+            self.faculties_window.show()
         self.close()
 
 
     def switch_to_sbornic(self):
-        self.sbornic_screen = section_screen.SectionsWindow()
+        self.sbornic_screen = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sbornic_screen.move(self.pos())
         self.sbornic_screen.resize(self.size())
-        self.sbornic_screen.show()
+        if self.isMaximized():
+            self.sbornic_screen.showMaximized()
+        else:
+            self.sbornic_screen.show()
+        self.close()
+
+
+    def switch_to_admins(self):
+        self.admins_screen = admin_panel.AdminWindow(authorization_api=self.authorization_api, previousWindow=self)
+        self.admins_screen.move(self.pos())
+        self.admins_screen.resize(self.size())
+        if self.isMaximized():
+            self.admins_screen.showMaximized()
+        else:
+            self.admins_screen.show()
         self.close()
 
 
@@ -395,10 +469,13 @@ class FacultyEditWindow(QMainWindow):
             print("return")
             return
         self.buttonContacts.setEnabled(False)
-        self.contacts_window = contacts_screen.ContactsWindow(faculty_info=self.faculty_info)
+        self.contacts_window = contacts_screen.ContactsWindow(faculty_info=self.faculty_info, authorization_api=self.authorization_api)
         self.contacts_window.move(self.pos())
         self.contacts_window.resize(self.size())
-        self.contacts_window.show()
+        if self.isMaximized():
+            self.contacts_window.showMaximized()
+        else:
+            self.contacts_window.show()
         self.close()
 
 
@@ -490,6 +567,16 @@ class FacultyEditWindow(QMainWindow):
     def edit_faculty(self):
         #print("edit section")
         #s = self.button_create.text()
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для отправки")
+                return
+        headers = {"Authorization": "Bearer "+token}
         if self.fac_id is None:
             self.button_send.setText("Отправить изменения")
             try:
@@ -499,17 +586,25 @@ class FacultyEditWindow(QMainWindow):
                         "abbreviation": str(self.abbreviation_input.text()),
                         "type": self.type_combobox.currentIndex(),
                         "info": self.editor.toPlainText(),
-                        "picture": ""
+                        "picture": "",
+                        "phoneNumber": self.telephone_link.get_text(),
+                        "websiteLink": self.website_link.get_text(),
+                        "vkLink": self.vk_link.get_text(),
+                        "instagramLink": self.instagram_link.get_text(),
+                        "facebookLink": self.facebook_link.get_text()
                     }
                 if (self.img_path):
                     j["picture"] = redakt4.get_photo_uri(self.img_path)
                 #print(j)
-                r = requests.post(global_constants.FACULTIES_API, json=j)
+                r = requests.post(global_constants.FACULTIES_API, json=j, headers=headers)
                 if (r.status_code == 200):
                     self.status.showMessage("Факультет создан!")
                     #print(r.json())
                     self.fac_id = r.json()['id']
                     self.name = r.json()['name']
+                    if self.faculty_info is None:
+                        self.faculty_info = BaseFacultyInfo()
+                    self.faculty_info.init_from_dict(r.json())
                     self.add_delete_button()
                 else:
                     print(r.status_code)
@@ -524,7 +619,12 @@ class FacultyEditWindow(QMainWindow):
                     "abbreviation": str(self.abbreviation_input.text()),
                     "type": self.type_combobox.currentIndex(),
                     "info": self.editor.toPlainText(),
-                    "picture": ""
+                    "picture": "",
+                    "phoneNumber": self.telephone_link.get_text(),
+                    "websiteLink": self.website_link.get_text(),
+                    "vkLink": self.vk_link.get_text(),
+                    "instagramLink": self.instagram_link.get_text(),
+                    "facebookLink": self.facebook_link.get_text()
                 }
             if self.img_url:
                 j["picture"] = self.img_url
@@ -537,12 +637,15 @@ class FacultyEditWindow(QMainWindow):
                 else:
                     pass
             try:
-                r = requests.put(global_constants.FACULTIES_API, json=j)
+                r = requests.put(global_constants.FACULTIES_API, json=j, headers=headers)
                 if (r.status_code == 200):
                     self.status.showMessage("Изменения отправлены!")
                     #print(r.json())
                     self.fac_id = r.json()['id']
                     self.name = r.json()['name']
+                    if self.faculty_info is None:
+                        self.faculty_info = BaseFacultyInfo()
+                    self.faculty_info.init_from_dict(r.json())
                 else:
                     print(r.status_code)
             except Exception as e:

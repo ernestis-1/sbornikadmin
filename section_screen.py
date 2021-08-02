@@ -12,7 +12,8 @@ from global_constants import SECTIONS_API
 from preloader import Preloader
 #from section_edit import SectionEditWindow
 import section_edit, redakt4
-import faculties_screen
+import faculties_screen, admin_panel
+from authorization_api import AuthorizationApi
 
 class Section(QPushButton):
     def __init__(self, sect_id=-1, img_path=None, section_name="section name", sectionsWindow=None):
@@ -70,9 +71,10 @@ class Section(QPushButton):
 class SectionsWindow(QMainWindow, QWidget):
     #async_sections_sygnal = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, authorization_api=AuthorizationApi()):
         super(SectionsWindow, self).__init__()
         self.resize(800, 600)
+        self.authorization_api = authorization_api
         self.api = SectionsApi(SECTIONS_API)
         self.sections_inited = False
         self.init_ui()
@@ -146,35 +148,58 @@ class SectionsWindow(QMainWindow, QWidget):
     def add_section_clicked(self):
         #print("clicked!")
         self.add_section_button.setEnabled(False)
-        self.section_edit_window = section_edit.SectionEditWindow()
+        self.section_edit_window = section_edit.SectionEditWindow(authorization_api=self.authorization_api)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
-        self.section_edit_window.show()
+        if self.isMaximized():
+            self.section_edit_window.showMaximized()
+        else:
+            self.section_edit_window.show()
         self.close()
         #self.destroy()
 
 
     def switch_to_faculty(self):
-        self.faculties_window = faculties_screen.FacultiesWindow()
+        self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
-        self.faculties_window.show()
+        if self.isMaximized():
+            self.faculties_window.showMaximized()
+        else:
+            self.faculties_window.show()
+        self.close()
+
+    
+    def switch_to_admins(self):
+        self.admins_screen = admin_panel.AdminWindow(authorization_api=self.authorization_api, previousWindow=self)
+        self.admins_screen.move(self.pos())
+        self.admins_screen.resize(self.size())
+        if self.isMaximized():
+            self.admins_screen.showMaximized()
+        else:
+            self.admins_screen.show()
         self.close()
 
 
     def switch_to_edit_section(self, sect_id, sect_name, sect_img):
-        self.section_edit_window = section_edit.SectionEditWindow(sect_id=sect_id, name=sect_name, filepath=sect_img)
+        self.section_edit_window = section_edit.SectionEditWindow(sect_id=sect_id, name=sect_name, filepath=sect_img, authorization_api=self.authorization_api)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
-        self.section_edit_window.show()
+        if self.isMaximized():
+            self.section_edit_window.showMaximized()
+        else:
+            self.section_edit_window.show()
         self.close()
 
 
     def redakt_action_triggered(self):
-        self.redakt_window = redakt4.EditorWindow()
+        self.redakt_window = redakt4.EditorWindow(authorization_api=self.authorization_api)
         self.redakt_window.move(self.pos())
         self.redakt_window.resize(self.size())
-        self.redakt_window.show()
+        if self.isMaximized():
+            self.redakt_window.showMaximized()
+        else:
+            self.redakt_window.show()
         self.close()
 
     def init_ui(self):
@@ -240,9 +265,6 @@ class SectionsWindow(QMainWindow, QWidget):
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 26))
         self.menubar.setObjectName("menubar")
         
-        self.menu_screens = QtWidgets.QMenu(self.menubar)
-        self.menu_screens.setObjectName("menuscreens")
-        
         self.menu_modes = QtWidgets.QMenu(self.menubar)
         self.menu_modes.setObjectName("menumodes")
         
@@ -251,17 +273,6 @@ class SectionsWindow(QMainWindow, QWidget):
         self.statusbar.setObjectName("statusbar")
         self.setStatusBar(self.statusbar)
 
-        #self.sections_list_action = QtWidgets.QAction(self)
-        #self.sections_list_action.setObjectName("sectionslistaction")
-        #self.sections_list_action.triggered.connect(self.sections_list_action_triggered)
-        
-        self.section_creation = QtWidgets.QAction(self)
-        self.section_creation.setObjectName("action_2")
-        self.section_creation.triggered.connect(self.add_section_clicked)
-
-        self.article_creation = QtWidgets.QAction(self)
-        self.article_creation.setObjectName("action_3")
-        self.article_creation.triggered.connect(self.redakt_action_triggered)
         
         self.sbornic_action = QtWidgets.QAction(self)
         self.sbornic_action.setObjectName("action_4")
@@ -270,16 +281,16 @@ class SectionsWindow(QMainWindow, QWidget):
         self.faculty_action.setObjectName("action_5")
         self.faculty_action.triggered.connect(self.switch_to_faculty)
         
-        #self.menu_screens.addAction(self.sections_list_action)
-        self.menu_screens.addAction(self.section_creation)
-        self.menu_screens.addAction(self.article_creation)
+        self.admins_action = QtWidgets.QAction(self)
+        self.admins_action.setObjectName("action_6")
+        self.admins_action.triggered.connect(self.switch_to_admins)
         
         self.menu_modes.addAction(self.sbornic_action)
         self.menu_modes.addAction(self.faculty_action)
+        self.menu_modes.addAction(self.admins_action)
         
         self.menubar.addAction(self.menu_modes.menuAction())
-        #self.menubar.addAction(self.menu_screens.menuAction())
-
+        
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
 
@@ -287,13 +298,10 @@ class SectionsWindow(QMainWindow, QWidget):
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("MainWindow", "ИСП admin"))
-        self.menu_screens.setTitle(_translate("MainWindow", "Экраны"))
         self.menu_modes.setTitle(_translate("MainWindow", "Режим"))
-        #self.sections_list_action.setText(_translate("MainWindow", "Список разделов"))
-        self.section_creation.setText(_translate("MainWindow", "Создание раздела"))
-        self.article_creation.setText(_translate("MainWindow", "Создание статьи"))
         self.sbornic_action.setText(_translate("MainWindow", "Сборник"))
         self.faculty_action.setText(_translate("MainWindow", "Факультет"))
+        self.admins_action.setText(_translate("MainWindow", "Админ-панель"))
 
 
         
@@ -303,8 +311,9 @@ def main():
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
 
-    MainWindow = SectionsWindow()
-    MainWindow.show()
+    authorization_api = AuthorizationApi()
+    MainWindow = SectionsWindow(authorization_api=authorization_api)
+    MainWindow.showMaximized()
     #print("show")
     
     with loop:
