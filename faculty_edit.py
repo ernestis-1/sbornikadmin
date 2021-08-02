@@ -1,4 +1,5 @@
 #работа с библиотекой PyQt5.QtGui(виджеты и прочее)
+from requests.api import head
 from faculty_api import BaseFacultyInfo
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -32,13 +33,45 @@ import contacts_screen
 from authorization_api import AuthorizationApi
 from login_screen import LoginWindow
 
+class LinkWidget(QWidget):
+    def __init__(self, link_text=None, img_path=None):
+        QWidget.__init__(self)
+        self.link_text = link_text
+        self.img_path = img_path
+        self.init_ui()
+
+    def init_ui(self):
+        main_layout = QHBoxLayout()
+        self.setLayout(main_layout)
+        
+        self.label_icon = QLabel(self)
+        icon_size = 25
+        pixmap = QPixmap(self.img_path).scaled(icon_size, icon_size)
+        self.label_icon.setPixmap(pixmap)
+
+        font = QFont()
+        font.setPointSize(10)
+
+        self.line_input = QLineEdit()
+        self.line_input.setFont(font)
+        if self.link_text:
+            self.line_input.setText(self.link_text)
+
+        main_layout.addWidget(self.label_icon)
+        main_layout.addWidget(self.line_input)
+    
+    def get_text(self):
+        return str(self.line_input.text())
+
+
 
 class FacultyEditWindow(QMainWindow):
-    def __init__(self, faculty_info=None, authorization_api=AuthorizationApi()):
+    def __init__(self, faculty_info=None, faculty_types=None, authorization_api=AuthorizationApi()):
         super().__init__()
         self.resize(800, 600)
         self.setWindowTitle("ИСП admin")
         self.faculty_info = faculty_info
+        self.faculty_types = faculty_types
         self.authorization_api = authorization_api
         if self.faculty_info:
             self.fac_id = faculty_info.fac_id
@@ -47,6 +80,11 @@ class FacultyEditWindow(QMainWindow):
             self.fac_type = faculty_info.fac_type
             self.fac_info = faculty_info.info
             self.img_url = faculty_info.img_url
+            self.phone_number_text = faculty_info.phone_number
+            self.website_link_text = faculty_info.website_link
+            self.vk_link_text = faculty_info.vk_link
+            self.instagram_link_text = faculty_info.instagram_link
+            self.facebook_link_text = faculty_info.facebook_link
         else:
             self.fac_id = None
             self.fac_name = None
@@ -54,6 +92,11 @@ class FacultyEditWindow(QMainWindow):
             self.fac_type = 0
             self.fac_info = None
             self.img_url = None
+            self.phone_number_text = None
+            self.website_link_text = None
+            self.vk_link_text = None
+            self.instagram_link_text = None
+            self.facebook_link_text = None
         self.img_path = None
         if (self.img_url is None) or (self.img_url==""):
             self.init_ui()
@@ -151,9 +194,12 @@ class FacultyEditWindow(QMainWindow):
         
         combobox_label = QLabel()
         combobox_label.setText("Тип СП")
-        combobox_label.setFont(mid_font)
+        #combobox_label.setFont(mid_font)
+        combobox_label.setFont(head_font)
         self.type_combobox = QComboBox()
         self.type_combobox_items = ["Структурное подразделение", "Факультет","Академия", "Институт"]
+        if (self.faculty_types):
+            self.type_combobox_items = self.faculty_types
         self.type_combobox.addItems(self.type_combobox_items) 
         self.type_combobox.setFont(mid_font)
         self.type_combobox.setCurrentIndex(self.fac_type)
@@ -167,7 +213,8 @@ class FacultyEditWindow(QMainWindow):
         
         abbreviation_label = QLabel()
         abbreviation_label.setText("Сокращенное название")
-        abbreviation_label.setFont(mid_font)
+        #abbreviation_label.setFont(mid_font)
+        abbreviation_label.setFont(head_font)
         self.abbreviation_input = QLineEdit()
         self.abbreviation_input.setFont(mid_font)
         if self.abbreviation:
@@ -181,9 +228,32 @@ class FacultyEditWindow(QMainWindow):
         mid_fields_layout.addLayout(abbreviation_layout)
         self.title_layout.addLayout(mid_fields_layout)
 
-
+        self.label_links = QLabel()
+        self.label_links.setFont(head_font)
+        self.label_links.setText("Ссылки")
+        self.title_layout.addWidget(self.label_links)
         
+        self.links_layout = QHBoxLayout()
+        self.left_links_layout = QVBoxLayout()
+        self.left_links_layout.setAlignment(Qt.AlignTop)
+        self.right_links_layout = QVBoxLayout()
+        self.right_links_layout.setAlignment(Qt.AlignTop)
 
+        self.vk_link = LinkWidget(self.vk_link_text, "images/VK.png")
+        self.left_links_layout.addWidget(self.vk_link)
+        self.instagram_link = LinkWidget(self.instagram_link_text, "images/Instagram.png")
+        self.left_links_layout.addWidget(self.instagram_link)
+        self.facebook_link = LinkWidget(self.facebook_link_text, "images/Facebook.png")
+        self.left_links_layout.addWidget(self.facebook_link)
+
+        self.telephone_link = LinkWidget(self.phone_number_text, "images/phone.png")
+        self.right_links_layout.addWidget(self.telephone_link)
+        self.website_link = LinkWidget(self.website_link_text, "images/domain.png")
+        self.right_links_layout.addWidget(self.website_link)
+
+        self.links_layout.addLayout(self.left_links_layout)
+        self.links_layout.addLayout(self.right_links_layout)
+        self.title_layout.addLayout(self.links_layout)
 
         self.label_image = QLabel()
         self.label_image.setScaledContents(True)
@@ -504,7 +574,12 @@ class FacultyEditWindow(QMainWindow):
                         "abbreviation": str(self.abbreviation_input.text()),
                         "type": self.type_combobox.currentIndex(),
                         "info": self.editor.toPlainText(),
-                        "picture": ""
+                        "picture": "",
+                        "phoneNumber": self.telephone_link.get_text(),
+                        "websiteLink": self.website_link.get_text(),
+                        "vkLink": self.vk_link.get_text(),
+                        "instagramLink": self.instagram_link.get_text(),
+                        "facebookLink": self.facebook_link.get_text()
                     }
                 if (self.img_path):
                     j["picture"] = redakt4.get_photo_uri(self.img_path)
@@ -532,7 +607,12 @@ class FacultyEditWindow(QMainWindow):
                     "abbreviation": str(self.abbreviation_input.text()),
                     "type": self.type_combobox.currentIndex(),
                     "info": self.editor.toPlainText(),
-                    "picture": ""
+                    "picture": "",
+                    "phoneNumber": self.telephone_link.get_text(),
+                    "websiteLink": self.website_link.get_text(),
+                    "vkLink": self.vk_link.get_text(),
+                    "instagramLink": self.instagram_link.get_text(),
+                    "facebookLink": self.facebook_link.get_text()
                 }
             if self.img_url:
                 j["picture"] = self.img_url

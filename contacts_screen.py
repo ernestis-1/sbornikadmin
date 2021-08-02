@@ -24,11 +24,12 @@ import contact_edit
 from authorization_api import AuthorizationApi
 
 class Contact(QPushButton):
-    def __init__(self, contact_id=None, contact_name=None, contact_position=None, photo_url=None, 
+    def __init__(self, contact_id=None, contact_type=None, contact_name=None, contact_position=None, photo_url=None, 
                     photo_path="images/attach.png", contact_number=None,
             contact_links=None, contacts_window=None):
         QWidget.__init__(self)
         self.contact_id = contact_id
+        self.contact_type = contact_type
         self.contact_name = contact_name
         self.contact_position = contact_position
         self.contact_number = contact_number
@@ -83,7 +84,8 @@ class Contact(QPushButton):
         if self.contacts_window:
             self.setEnabled(False)
             self.contacts_window.forbidDeletion(self.photo_path)
-            self.contacts_window.open_contact_edit(self.contact_id, self.contact_name, self.contact_position, self.contact_number,
+            self.contacts_window.open_contact_edit(self.contact_id, self.contact_type, self.contact_name, 
+                self.contact_position, self.contact_number,
                 self.photo_path, self.photo_url, self.contact_links)
 
 
@@ -104,7 +106,9 @@ class ContactsWindow(QMainWindow):
             self.fac_info = None
             self.fac_img_url = None
         self.contacts_inited = False
-        self.api = FacultiesApi(global_constants.FACULTIES_API, global_constants.FACULTIES_INFO_API, global_constants.FACULTIES_INFO_ID)
+        self.contact_types = None
+        self.api = FacultiesApi(global_constants.FACULTIES_API, global_constants.FACULTIES_INFO_API, 
+                    global_constants.FACULTIES_INFO_ID, global_constants.CONTACT_TYPES_API)
         self.setWindowTitle("Контакты")
         self.init_ui()
         self.init_menu()
@@ -140,6 +144,7 @@ class ContactsWindow(QMainWindow):
         if (self.fac_name is None) and (self.fac_id is None):
             return
         contacts = await self.api.get_faculty_info(self.fac_id, self.fac_name)
+        self.contact_types = await self.api.get_contacts_types(self.fac_id) #for contact_edit window
         urls = []
         for contact in contacts:
             urls.append(contact.img_url)
@@ -152,8 +157,9 @@ class ContactsWindow(QMainWindow):
         for i in range(0, len(contacts)):
             cont_info = contacts[i]
             if img_paths[i]:
-                contact_widget = Contact(cont_info.cont_id, cont_info.name, cont_info.position, cont_info.img_url, img_paths[i]
-                    , cont_info.phone_number, cont_info.links, contacts_window=self)
+                contact_widget = Contact(cont_info.cont_id, cont_info.cont_type, cont_info.name, cont_info.position, 
+                    cont_info.img_url, img_paths[i],
+                    cont_info.phone_number, cont_info.links, contacts_window=self)
             else:
                 contact_widget = Contact(cont_info.cont_id, cont_info.name, cont_info.position, cont_info.img_url, 
                                 contact_number=cont_info.phone_number, contact_links=cont_info.links, contacts_window=self)
@@ -304,17 +310,19 @@ class ContactsWindow(QMainWindow):
     
 
     def add_contact_clicked(self):
-        self.contact_window = contact_edit.ContactEditorWindow(faculty_info=self.faculty_info, authorization_api=self.authorization_api)
+        self.contact_window = contact_edit.ContactEditorWindow(faculty_info=self.faculty_info, contact_types=self.contact_types,
+                authorization_api=self.authorization_api)
         self.contact_window.move(self.pos())
         self.contact_window.resize(self.size())
         self.contact_window.show()
         self.close()
 
 
-    def open_contact_edit(self, contact_id, contact_name, contact_position, contact_number, photo_path, photo_url, contact_links):
+    def open_contact_edit(self, contact_id, contact_type, contact_name, contact_position, 
+                contact_number, photo_path, photo_url, contact_links):
         #print(photo_path)
         self.contact_window = contact_edit.ContactEditorWindow(self.faculty_info,
-                contact_id, contact_name, contact_position, contact_number, 
+                contact_id, contact_type, self.contact_types, contact_name, contact_position, contact_number, 
                 photo_path, photo_url, contact_links,
                 authorization_api=self.authorization_api)
         self.contact_window.move(self.pos())

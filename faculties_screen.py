@@ -94,8 +94,10 @@ class FacultiesWindow(QMainWindow):
         QMainWindow.__init__(self)
         self.authorization_api = authorization_api
         self.resize(800, 600)
-        self.api = FacultiesApi(global_constants.FACULTIES_API)
+        self.api = FacultiesApi(global_constants.FACULTIES_API, global_constants.FACULTIES_INFO_API, global_constants.FACULTIES_INFO_ID,
+            global_constants.CONTACT_TYPES_API, global_constants.FACULTIES_TYPES_API)
         self.faculties_inited = False
+        self.faculty_types = None
         self.init_ui()
         self.init_menu()
 
@@ -167,6 +169,7 @@ class FacultiesWindow(QMainWindow):
     async def init_faculties(self):
         #print("init sections")
         self.faculties = await self.api.get_faculties()
+        self.faculty_types = await self.api.get_faculties_types()
 
         faculties = []
         async with aiohttp.ClientSession() as session:
@@ -189,7 +192,7 @@ class FacultiesWindow(QMainWindow):
 
     def add_faculty_clicked(self):
         #print("clicked!")
-        self.faculty_edit_window = faculty_edit.FacultyEditWindow(authorization_api=self.authorization_api)
+        self.faculty_edit_window = faculty_edit.FacultyEditWindow(faculty_types=self.faculty_types,authorization_api=self.authorization_api)
         self.add_section_button.setEnabled(False)
         self.faculty_edit_window.move(self.pos())
         self.faculty_edit_window.resize(self.size())
@@ -200,7 +203,7 @@ class FacultiesWindow(QMainWindow):
 
     def switch_to_edit_faculty(self, faculty_info):
         #self.section_edit_window = faculty_edit.FacultyEditWindow(fac_id=fact_id, fac_name=fac_name, fac_info=fac_info, img_url=img_url)
-        self.faculty_edit_window = faculty_edit.FacultyEditWindow(faculty_info, authorization_api=self.authorization_api)
+        self.faculty_edit_window = faculty_edit.FacultyEditWindow(faculty_info, faculty_types=self.faculty_types, authorization_api=self.authorization_api)
         self.faculty_edit_window.move(self.pos())
         self.faculty_edit_window.resize(self.size())
         self.faculty_edit_window.show()

@@ -25,7 +25,8 @@ from login_screen import LoginWindow
 
 class ContactEditorWindow(QMainWindow):
     def __init__(self, faculty_info=None,
-                    contact_id=None, contact_name=None, contact_position=None, contact_number=None, 
+                    contact_id=None, contact_type="Студсовет", contact_types = ["Деканат", "Студсовет", "Другое"], 
+                    contact_name=None, contact_position=None, contact_number=None, 
                     photo_path = None, photo_url=None, contact_links=[], authorization_api=AuthorizationApi()):
         QMainWindow.__init__(self)
         self.authorization_api = authorization_api
@@ -36,6 +37,8 @@ class ContactEditorWindow(QMainWindow):
             self.fac_id = None
 
         self.contact_id = contact_id
+        self.contact_type = contact_type
+        self.contact_types = contact_types
         self.contact_name = contact_name
         self.contact_position = contact_position
         self.photo_path = photo_path
@@ -49,6 +52,7 @@ class ContactEditorWindow(QMainWindow):
         self.status = QStatusBar()
         self.setStatusBar(self.status)
         self.resize(800, 450)
+
 
     def init_ui(self):
         main_main_layout = QVBoxLayout()
@@ -89,8 +93,9 @@ class ContactEditorWindow(QMainWindow):
         self.label_group.setFont(font_labels)
 
         self.group_combobox = QComboBox()
-        self.group_combobox_items = ["Дирекция", "Студсовет", "Другое"]
-        self.group_combobox.addItems(self.group_combobox_items) 
+        self.group_combobox_items = self.contact_types
+        self.group_combobox.addItems(self.group_combobox_items)
+        self.group_combobox.setCurrentText(self.contact_type) 
         self.group_combobox.setFont(self.font_lines)
         #self.type_combobox.setCurrentIndex(self.fac_type)
 
@@ -282,6 +287,7 @@ class ContactEditorWindow(QMainWindow):
         #pixmap = QPixmap(file_name)
         self.label_image.setPixmap(background)
 
+
     def add_link(self):
         lineEdit_link = QtWidgets.QLineEdit()
         lineEdit_link.setFont(self.font_lines)
@@ -420,6 +426,7 @@ class ContactEditorWindow(QMainWindow):
                 #print(self.line_input_head.text())
                 j = {
                         "facultyId": self.fac_id,
+                        "type": self.group_combobox.currentText(),
                         "name": self.lineEdit_name.text(),
                         "position": self.lineEdit_position.text(),
                         "phoneNumber": self.lineEdit_phone_number.text(),
@@ -448,6 +455,7 @@ class ContactEditorWindow(QMainWindow):
             j = {
                     "id": self.contact_id,
                     "facultyId": self.fac_id,
+                    "type": self.group_combobox.currentText(),
                     "name": self.lineEdit_name.text(),
                     "position": self.lineEdit_position.text(),
                     "phoneNumber": self.lineEdit_phone_number.text(),

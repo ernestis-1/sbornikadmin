@@ -68,6 +68,7 @@ class User(QFrame):
         self.button_edit_password = QPushButton(self)
         self.button_edit_password.setText("Сменить пароль")
         self.button_edit_password.setFont(label_font)
+        self.button_edit_password.clicked.connect(self.change_password)
 
         self.button_delete = QPushButton(self)
         self.button_delete.setIcon(QIcon("images/bin.png"))
@@ -84,6 +85,9 @@ class User(QFrame):
     def delete_clicked(self):
         self.admin_window.delete_admin(self.user_login, self)
         self.setEnabled(False)
+
+    def change_password(self):
+        self.admin_window.edit_admin_clicked(self.user_login)
 
 
 class AdminWindow(QMainWindow):
@@ -206,10 +210,25 @@ class AdminWindow(QMainWindow):
         #self.scroll_layout.addStretch()
         self.admins_inited = True
 
-    
+
+    def edit_admin_clicked(self, admin_login):
+        if self.admins_inited:
+            self.edit_user_window = EditUserWindow(self.authorization_api, admin_login, parent=self)
+            if self.edit_user_window.exec_() == QDialog.Accepted:
+                self.admins_inited = False
+                for i in reversed(range(self.scroll_layout.count())):
+                    item = self.scroll_layout.itemAt(i)
+                    widget = item.widget()
+                    widget.setParent(None)
+                self.scroll_layout.setAlignment(Qt.AlignVCenter)
+                self.preloader.show()
+                self.preloader.start_loader_animation()
+                asyncio.ensure_future(self.init_admins())
+
+
     def add_admin_clicked(self):
         if self.admins_inited:
-            self.edit_user_window = EditUserWindow(self.authorization_api, parent=self)
+            self.edit_user_window = EditUserWindow(self.authorization_api, None, parent=self)
             if self.edit_user_window.exec_() == QDialog.Accepted:
                 self.admins_inited = False
                 for i in reversed(range(self.scroll_layout.count())):
