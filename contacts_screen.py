@@ -267,7 +267,10 @@ class ContactsWindow(QMainWindow):
         self.faculty_edit_window = faculty_edit.FacultyEditWindow(authorization_api=self.authorization_api)
         self.faculty_edit_window.move(self.pos())
         self.faculty_edit_window.resize(self.size())
-        self.faculty_edit_window.show()
+        if self.isMaximized():
+            self.faculty_edit_window.showMaximized()
+        else:
+            self.faculty_edit_window.show()
         self.close()
         #self.destroy()
 
@@ -278,10 +281,13 @@ class ContactsWindow(QMainWindow):
 
 
     def switch_to_edit_faculty(self, faculty_info=None):
-        self.section_edit_window = faculty_edit.FacultyEditWindow(faculty_info=faculty_info, authorization_api=self.authorization_api)
-        self.section_edit_window.move(self.pos())
-        self.section_edit_window.resize(self.size())
-        self.section_edit_window.show()
+        self.faculty_edit_window = faculty_edit.FacultyEditWindow(faculty_info=faculty_info, authorization_api=self.authorization_api)
+        self.faculty_edit_window.move(self.pos())
+        self.faculty_edit_window.resize(self.size())
+        if self.isMaximized():
+            self.faculty_edit_window.showMaximized()
+        else:
+            self.faculty_edit_window.show()
         self.close()
 
 
@@ -289,7 +295,10 @@ class ContactsWindow(QMainWindow):
         self.sbornic_screen = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sbornic_screen.move(self.pos())
         self.sbornic_screen.resize(self.size())
-        self.sbornic_screen.show()
+        if self.isMaximized():
+            self.sbornic_screen.showMaximized()
+        else:
+            self.sbornic_screen.show()
         self.close()
 
 
@@ -297,7 +306,10 @@ class ContactsWindow(QMainWindow):
         self.admins_screen = admin_panel.AdminWindow(authorization_api=self.authorization_api, previousWindow=self)
         self.admins_screen.move(self.pos())
         self.admins_screen.resize(self.size())
-        self.admins_screen.show()
+        if self.isMaximized():
+            self.admins_screen.showMaximized()
+        else:
+            self.admins_screen.show()
         self.close()
 
 
@@ -305,7 +317,10 @@ class ContactsWindow(QMainWindow):
         self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
-        self.faculties_window.show()
+        if self.isMaximized():
+            self.faculties_window.showMaximized()
+        else:
+            self.faculties_window.show()
         self.close()
     
 
@@ -314,7 +329,10 @@ class ContactsWindow(QMainWindow):
                 authorization_api=self.authorization_api)
         self.contact_window.move(self.pos())
         self.contact_window.resize(self.size())
-        self.contact_window.show()
+        if self.isMaximized():
+            self.contact_window.showMaximized()
+        else:
+            self.contact_window.show()
         self.close()
 
 
@@ -327,7 +345,10 @@ class ContactsWindow(QMainWindow):
                 authorization_api=self.authorization_api)
         self.contact_window.move(self.pos())
         self.contact_window.resize(self.size())
-        self.contact_window.show()
+        if self.isMaximized():
+            self.contact_window.showMaximized()
+        else:
+            self.contact_window.show()
         self.close()
 
 

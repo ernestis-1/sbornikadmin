@@ -303,7 +303,10 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.sections_window = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sections_window.move(self.pos())
         self.sections_window.resize(self.size())
-        self.sections_window.show()
+        if self.isMaximized():
+            self.sections_window.showMaximized()
+        else:
+            self.sections_window.show()
         self.close()
         #self.destroy()
 
@@ -313,7 +316,10 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.section_edit_window = section_edit.SectionEditWindow(authorization_api=self.authorization_api)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
-        self.section_edit_window.show()
+        if self.isMaximized():
+            self.section_edit_window.showMaximized()
+        else:
+            self.section_edit_window.show()
         self.close()
         #self.destroy()
 
@@ -326,7 +332,10 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.button_back.setEnabled(False)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
-        self.section_edit_window.show()
+        if self.isMaximized():
+            self.section_edit_window.showMaximized()
+        else:
+            self.section_edit_window.show()
         self.close()
         #self.destroy()
 
@@ -335,7 +344,10 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
-        self.faculties_window.show()
+        if self.isMaximized():
+            self.faculties_window.showMaximized()
+        else:
+            self.faculties_window.show()
         self.close()
 
 
@@ -343,7 +355,10 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.admins_screen = admin_panel.AdminWindow(authorization_api=self.authorization_api, previousWindow=self)
         self.admins_screen.move(self.pos())
         self.admins_screen.resize(self.size())
-        self.admins_screen.show()
+        if self.isMaximized():
+            self.admins_screen.showMaximized()
+        else:
+            self.admins_screen.show()
         self.close()
 
 

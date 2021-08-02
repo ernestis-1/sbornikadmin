@@ -151,7 +151,10 @@ class SectionsWindow(QMainWindow, QWidget):
         self.section_edit_window = section_edit.SectionEditWindow(authorization_api=self.authorization_api)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
-        self.section_edit_window.show()
+        if self.isMaximized():
+            self.section_edit_window.showMaximized()
+        else:
+            self.section_edit_window.show()
         self.close()
         #self.destroy()
 
@@ -160,7 +163,10 @@ class SectionsWindow(QMainWindow, QWidget):
         self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
-        self.faculties_window.show()
+        if self.isMaximized():
+            self.faculties_window.showMaximized()
+        else:
+            self.faculties_window.show()
         self.close()
 
     
@@ -168,7 +174,10 @@ class SectionsWindow(QMainWindow, QWidget):
         self.admins_screen = admin_panel.AdminWindow(authorization_api=self.authorization_api, previousWindow=self)
         self.admins_screen.move(self.pos())
         self.admins_screen.resize(self.size())
-        self.admins_screen.show()
+        if self.isMaximized():
+            self.admins_screen.showMaximized()
+        else:
+            self.admins_screen.show()
         self.close()
 
 
@@ -176,7 +185,10 @@ class SectionsWindow(QMainWindow, QWidget):
         self.section_edit_window = section_edit.SectionEditWindow(sect_id=sect_id, name=sect_name, filepath=sect_img, authorization_api=self.authorization_api)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
-        self.section_edit_window.show()
+        if self.isMaximized():
+            self.section_edit_window.showMaximized()
+        else:
+            self.section_edit_window.show()
         self.close()
 
 
@@ -184,7 +196,10 @@ class SectionsWindow(QMainWindow, QWidget):
         self.redakt_window = redakt4.EditorWindow(authorization_api=self.authorization_api)
         self.redakt_window.move(self.pos())
         self.redakt_window.resize(self.size())
-        self.redakt_window.show()
+        if self.isMaximized():
+            self.redakt_window.showMaximized()
+        else:
+            self.redakt_window.show()
         self.close()
 
     def init_ui(self):
@@ -298,7 +313,7 @@ def main():
 
     authorization_api = AuthorizationApi()
     MainWindow = SectionsWindow(authorization_api=authorization_api)
-    MainWindow.show()
+    MainWindow.showMaximized()
     #print("show")
     
     with loop:

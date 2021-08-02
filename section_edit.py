@@ -378,7 +378,10 @@ class SectionEditWindow(QMainWindow):
         self.sections_window = section_screen.SectionsWindow(authorization_api=self.authorization_api)
         self.sections_window.move(self.pos())
         self.sections_window.resize(self.size())
-        self.sections_window.show()
+        if self.isMaximized():
+            self.sections_window.showMaximized()
+        else:
+            self.sections_window.show()
         self.close()
         #self.destroy()
 
@@ -394,7 +397,10 @@ class SectionEditWindow(QMainWindow):
                                 authorization_api=self.authorization_api)
         self.article_window.move(self.pos())
         self.article_window.resize(self.size())
-        self.article_window.show()
+        if self.isMaximized():
+            self.article_window.showMaximized()
+        else:
+            self.article_window.show()
         self.close()
 
 
@@ -402,7 +408,10 @@ class SectionEditWindow(QMainWindow):
         self.redakt_window = redakt4.EditorWindow(authorization_api=self.authorization_api)
         self.redakt_window.move(self.pos())
         self.redakt_window.resize(self.size())
-        self.redakt_window.show()
+        if self.isMaximized():
+            self.redakt_window.showMaximized()
+        else:
+            self.redakt_window.show()
         self.close()
 
 
@@ -410,7 +419,10 @@ class SectionEditWindow(QMainWindow):
         self.faculties_window = faculties_screen.FacultiesWindow(authorization_api=self.authorization_api)
         self.faculties_window.move(self.pos())
         self.faculties_window.resize(self.size())
-        self.faculties_window.show()
+        if self.isMaximized():
+            self.faculties_window.showMaximized()
+        else:
+            self.faculties_window.show()
         self.close()
 
 
@@ -418,7 +430,10 @@ class SectionEditWindow(QMainWindow):
         self.admins_screen = admin_panel.AdminWindow(authorization_api=self.authorization_api, previousWindow=self)
         self.admins_screen.move(self.pos())
         self.admins_screen.resize(self.size())
-        self.admins_screen.show()
+        if self.isMaximized():
+            self.admins_screen.showMaximized()
+        else:
+            self.admins_screen.show()
         self.close()
 
 
