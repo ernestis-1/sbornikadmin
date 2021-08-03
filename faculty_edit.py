@@ -656,9 +656,19 @@ class FacultyEditWindow(QMainWindow):
     def delete_faculty(self):
         if self.fac_id is None:
             return
+        token = self.authorization_api.get_token()
+        if token is None:
+            #print("token is None")
+            self.login_window = LoginWindow(self.authorization_api, parent=self)
+            if self.login_window.exec_() == QDialog.Accepted:
+                token = self.authorization_api.get_token()
+            else:
+                self.status.showMessage("Необходимо иметь права админа для удаления")
+                return
+        headers = {"Authorization": "Bearer "+token}
         #payload = {'id': self.sect_id}
         try:
-            r = requests.delete(global_constants.FACULTIES_API+f"/{self.fac_id}")
+            r = requests.delete(global_constants.FACULTIES_API+f"/{self.fac_id}", headers=headers)
             if (r.status_code == 200):
                 self.status.showMessage("Факультет удалён!")
                 self.faculties_list_action_triggered()
