@@ -145,6 +145,8 @@ class ContactsWindow(QMainWindow):
             return
         contacts = await self.api.get_faculty_info(self.fac_id, self.fac_name)
         self.contact_types = await self.api.get_contacts_types(self.fac_id) #for contact_edit window
+        #for contact_type in self.contact_types:
+            #print(contact_type)
         urls = []
         for contact in contacts:
             urls.append(contact.img_url)
@@ -161,8 +163,9 @@ class ContactsWindow(QMainWindow):
                     cont_info.img_url, img_paths[i],
                     cont_info.phone_number, cont_info.links, contacts_window=self)
             else:
-                contact_widget = Contact(cont_info.cont_id, cont_info.name, cont_info.position, cont_info.img_url, 
-                                contact_number=cont_info.phone_number, contact_links=cont_info.links, contacts_window=self)
+                contact_widget = Contact(cont_info.cont_id, cont_info.cont_type, cont_info.name, cont_info.position, 
+                    cont_info.img_url, 
+                    contact_number=cont_info.phone_number, contact_links=cont_info.links, contacts_window=self)
             contact_widgets.append(contact_widget)
 
         self.preloader.stop_loader_animation()

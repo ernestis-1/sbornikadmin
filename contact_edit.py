@@ -439,9 +439,10 @@ class ContactEditorWindow(QMainWindow):
             self.button_edit.setText("Отправить изменения")
             try:
                 #print(self.line_input_head.text())
+                #print(self.group_combobox.currentIndex())
                 j = {
                         "facultyId": self.fac_id,
-                        "type": self.group_combobox.currentText(),
+                        "type": self.group_combobox.currentIndex(),
                         "name": self.lineEdit_name.text(),
                         "position": self.lineEdit_position.text(),
                         "phoneNumber": self.lineEdit_phone_number.text(),
@@ -461,6 +462,7 @@ class ContactEditorWindow(QMainWindow):
                     self.add_delete_button()
                 else:
                     print(r.status_code)
+                    self.status.showMessage("Произошла ошибка при отправке!")
             except Exception as e:
                 #import traceback
                 self.status.showMessage("Ошибка!")

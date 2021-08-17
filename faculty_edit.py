@@ -85,6 +85,9 @@ class FacultyEditWindow(QMainWindow):
             self.vk_link_text = faculty_info.vk_link
             self.instagram_link_text = faculty_info.instagram_link
             self.facebook_link_text = faculty_info.facebook_link
+            self.sic_link_text = faculty_info.sic_link
+            self.email_text = faculty_info.email
+            self.specialHashtagId = faculty_info.specialHashtagId
         else:
             self.fac_id = None
             self.fac_name = None
@@ -97,6 +100,9 @@ class FacultyEditWindow(QMainWindow):
             self.vk_link_text = None
             self.instagram_link_text = None
             self.facebook_link_text = None
+            self.sic_link_text = None
+            self.email_text = None
+            self.specialHashtagId = -1
         self.img_path = None
         if (self.img_url is None) or (self.img_url==""):
             self.init_ui()
@@ -228,10 +234,10 @@ class FacultyEditWindow(QMainWindow):
         mid_fields_layout.addLayout(abbreviation_layout)
         self.title_layout.addLayout(mid_fields_layout)
 
-        self.label_links = QLabel()
-        self.label_links.setFont(head_font)
-        self.label_links.setText("Ссылки")
-        self.title_layout.addWidget(self.label_links)
+        #self.label_links = QLabel()
+        #self.label_links.setFont(head_font)
+        #self.label_links.setText("Ссылки")
+        #self.title_layout.addWidget(self.label_links)
         
         self.links_layout = QHBoxLayout()
         self.left_links_layout = QVBoxLayout()
@@ -245,11 +251,15 @@ class FacultyEditWindow(QMainWindow):
         self.left_links_layout.addWidget(self.instagram_link)
         self.facebook_link = LinkWidget(self.facebook_link_text, "images/Facebook.png")
         self.left_links_layout.addWidget(self.facebook_link)
+        self.sic_link = LinkWidget(self.sic_link_text, "images/sic.jpg")
+        self.left_links_layout.addWidget(self.sic_link)
 
         self.telephone_link = LinkWidget(self.phone_number_text, "images/phone.png")
         self.right_links_layout.addWidget(self.telephone_link)
         self.website_link = LinkWidget(self.website_link_text, "images/domain.png")
         self.right_links_layout.addWidget(self.website_link)
+        self.email_link = LinkWidget(self.email_text, "images/email.png")
+        self.right_links_layout.addWidget(self.email_link)
 
         self.links_layout.addLayout(self.left_links_layout)
         self.links_layout.addLayout(self.right_links_layout)
@@ -591,10 +601,13 @@ class FacultyEditWindow(QMainWindow):
                         "websiteLink": self.website_link.get_text(),
                         "vkLink": self.vk_link.get_text(),
                         "instagramLink": self.instagram_link.get_text(),
-                        "facebookLink": self.facebook_link.get_text()
+                        "facebookLink": self.facebook_link.get_text(),
+                        "sicLink": self.sic_link.get_text(),
+                        "email": self.email_link.get_text()
                     }
                 if (self.img_path):
                     j["picture"] = redakt4.get_photo_uri(self.img_path)
+                    #print(j["picture"])
                 #print(j)
                 r = requests.post(global_constants.FACULTIES_API, json=j, headers=headers)
                 if (r.status_code == 200):
@@ -607,6 +620,7 @@ class FacultyEditWindow(QMainWindow):
                     self.faculty_info.init_from_dict(r.json())
                     self.add_delete_button()
                 else:
+                    print(j)
                     print(r.status_code)
             except Exception as e:
                 self.status.showMessage("Ошибка!")
@@ -624,7 +638,10 @@ class FacultyEditWindow(QMainWindow):
                     "websiteLink": self.website_link.get_text(),
                     "vkLink": self.vk_link.get_text(),
                     "instagramLink": self.instagram_link.get_text(),
-                    "facebookLink": self.facebook_link.get_text()
+                    "facebookLink": self.facebook_link.get_text(),
+                    "sicLink": self.sic_link.get_text(),
+                    "email": self.email_link.get_text(),
+                    "specialHashtagId": self.specialHashtagId
                 }
             if self.img_url:
                 j["picture"] = self.img_url

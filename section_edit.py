@@ -43,9 +43,10 @@ class Article(QPushButton):
 
 
 class SectionEditWindow(QMainWindow):
-    def __init__(self, sect_id=None, name=None, filepath=None, img_url=None, authorization_api=AuthorizationApi()):
+    def __init__(self, sect_id=None, name=None, filepath=None, img_url=None, authorization_api=AuthorizationApi(), last_screen=None):
         super().__init__()
         self.authorization_api = authorization_api
+        self.last_screen = last_screen
         #existing section parameters
         self.sect_id = sect_id
         self.name = name
@@ -183,6 +184,8 @@ class SectionEditWindow(QMainWindow):
         if self.sect_id and self.loading:
             self.loading = True
             asyncio.ensure_future(self.init_articles())
+        #if self.last_screen:
+            #self.last_screen.close()
 
 
     def init_article_area(self):

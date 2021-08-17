@@ -6,7 +6,8 @@ from sections_api import write_image, get_image_path_from_url
 
 class BaseFacultyInfo:
     def __init__(self, fac_id=None, fac_name=None, abbreviation=None, fac_type=None, info=None, img_url=None, 
-                phone_number=None, website_link=None, vk_link=None, instagram_link=None, facebook_link=None):
+                phone_number=None, website_link=None, vk_link=None, instagram_link=None, facebook_link=None,
+                sic_link=None, email=None, specialHashtagId = None):
         self.fac_id = fac_id
         self.fac_name = fac_name
         self.abbreviation = abbreviation
@@ -18,6 +19,9 @@ class BaseFacultyInfo:
         self.vk_link = vk_link
         self.instagram_link = instagram_link
         self.facebook_link = facebook_link
+        self.sic_link = sic_link
+        self.email = email
+        self.specialHashtagId = specialHashtagId
 
     
     def init_from_dict(self, dict):
@@ -32,6 +36,9 @@ class BaseFacultyInfo:
         self.vk_link = dict["vkLink"]
         self.instagram_link = dict["instagramLink"]
         self.facebook_link = dict["facebookLink"]
+        self.sic_link = dict["sicLink"]
+        self.email = dict["email"]
+        self.specialHashtagId = dict["specialHashtagId"]
 
 
 class ContactInfo:
@@ -80,16 +87,16 @@ class FacultiesApi:
         return l
 
     async def get_faculty_info(self, fac_id, name):
-        if name:
-            json = {"name": name}
-            async with aiohttp.ClientSession() as session:
-                async with session.put(self.url_full, json=json) as r:
-                    j = await r.json()
-        elif fac_id:
+        if fac_id:
             if self.url_id is None:
                 return
             async with aiohttp.ClientSession() as session:
                 async with session.get(self.url_id+f"/{fac_id}") as r:
+                    j = await r.json()
+        elif name:
+            json = {"name": name}
+            async with aiohttp.ClientSession() as session:
+                async with session.put(self.url_full, json=json) as r:
                     j = await r.json()
         else:
             return
@@ -99,10 +106,12 @@ class FacultiesApi:
         _info = j["info"]
         _picture = j["picture"]
         _contacts = j["contacts"]
+        print(_contacts)
         contacts = []
         for _contact in _contacts:
             contact = ContactInfo(_contact["id"], _contact["type"], _contact["name"], _contact["position"],
                     _contact["phoneNumber"], _contact["links"], _contact["photo"])
+            #print(contact.cont_type)
             contacts.append(contact)
         return contacts
 
@@ -124,7 +133,10 @@ class GatherImages:
         self.loop = loop
 
     async def add_image(self, session, local_id, image_url):
-        filename = await get_image_path_from_url(session, image_url)
+        if image_url != "" and image_url is not None:
+            filename = await get_image_path_from_url(session, image_url)
+        else:
+            filename = None
         self.images.append((local_id, filename))
 
     async def get_images(self, session, urls):

@@ -182,7 +182,8 @@ class SectionsWindow(QMainWindow, QWidget):
 
 
     def switch_to_edit_section(self, sect_id, sect_name, sect_img):
-        self.section_edit_window = section_edit.SectionEditWindow(sect_id=sect_id, name=sect_name, filepath=sect_img, authorization_api=self.authorization_api)
+        self.section_edit_window = section_edit.SectionEditWindow(sect_id=sect_id, name=sect_name, filepath=sect_img, authorization_api=self.authorization_api,
+            last_screen=self)
         self.section_edit_window.move(self.pos())
         self.section_edit_window.resize(self.size())
         if self.isMaximized():
