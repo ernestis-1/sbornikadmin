@@ -25,7 +25,7 @@ import aiohttp
 import uuid
 
 from preloader import Preloader
-from sections_api import get_image_path_from_url
+from images_api import get_one_image, get_photo_uri
 import global_constants
 import section_screen, faculties_screen, admin_panel
 import redakt4
@@ -87,7 +87,7 @@ class FacultyEditWindow(QMainWindow):
             self.facebook_link_text = faculty_info.facebook_link
             self.sic_link_text = faculty_info.sic_link
             self.email_text = faculty_info.email
-            self.specialHashtagId = faculty_info.specialHashtagId
+            #self.specialHashtagId = faculty_info.specialHashtagId
         else:
             self.fac_id = None
             self.fac_name = None
@@ -102,7 +102,7 @@ class FacultyEditWindow(QMainWindow):
             self.facebook_link_text = None
             self.sic_link_text = None
             self.email_text = None
-            self.specialHashtagId = -1
+            #self.specialHashtagId = -1
         self.img_path = None
         if (self.img_url is None) or (self.img_url==""):
             self.init_ui()
@@ -122,8 +122,7 @@ class FacultyEditWindow(QMainWindow):
 
 
     async def init_content(self):
-        async with aiohttp.ClientSession() as session:
-            self.img_path = await get_image_path_from_url(session, self.img_url)
+        self.img_path = await get_one_image(self.img_url)
 
         self.preloader.stop_loader_animation()
         self.init_ui()
@@ -606,14 +605,15 @@ class FacultyEditWindow(QMainWindow):
                         "email": self.email_link.get_text()
                     }
                 if (self.img_path):
-                    j["picture"] = redakt4.get_photo_uri(self.img_path)
+                    j["picture"] = get_photo_uri(self.img_path)
                     #print(j["picture"])
                 #print(j)
                 r = requests.post(global_constants.FACULTIES_API, json=j, headers=headers)
                 if (r.status_code == 200):
                     self.status.showMessage("Факультет создан!")
-                    #print(r.json())
+                    print(r.json())
                     self.fac_id = r.json()['id']
+                    #print(self.fac_id)
                     self.name = r.json()['name']
                     if self.faculty_info is None:
                         self.faculty_info = BaseFacultyInfo()
@@ -641,18 +641,19 @@ class FacultyEditWindow(QMainWindow):
                     "facebookLink": self.facebook_link.get_text(),
                     "sicLink": self.sic_link.get_text(),
                     "email": self.email_link.get_text(),
-                    "specialHashtagId": self.specialHashtagId
+                    #"specialHashtagId": self.specialHashtagId
                 }
             if self.img_url:
                 j["picture"] = self.img_url
             else:
                 if (self.img_path):
                     try:
-                        j["picture"] = redakt4.get_photo_uri(self.img_path)
+                        j["picture"] = get_photo_uri(self.img_path)
                     except Exception as e:
                         print(e)
                 else:
                     pass
+            #print(j)
             try:
                 r = requests.put(global_constants.FACULTIES_API, json=j, headers=headers)
                 if (r.status_code == 200):
@@ -664,6 +665,7 @@ class FacultyEditWindow(QMainWindow):
                         self.faculty_info = BaseFacultyInfo()
                     self.faculty_info.init_from_dict(r.json())
                 else:
+                    self.status.showMessage("Ошибка при отправке!")
                     print(r.status_code)
             except Exception as e:
                 self.status.showMessage("Ошибка при отправке!")

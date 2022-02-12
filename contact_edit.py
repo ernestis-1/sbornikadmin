@@ -22,6 +22,7 @@ import faculties_screen, faculty_edit, contacts_screen, section_screen, admin_pa
 import global_constants
 from authorization_api import AuthorizationApi
 from login_screen import LoginWindow
+from images_api import get_photo_uri
 
 class ContactEditorWindow(QMainWindow):
     def __init__(self, faculty_info=None,
@@ -450,7 +451,7 @@ class ContactEditorWindow(QMainWindow):
                         "photo": ""
                     }
                 if (self.photo_path):
-                    self.photo_url = redakt4.get_photo_uri(self.photo_path)
+                    self.photo_url = get_photo_uri(self.photo_path)
                     j["photo"] = self.photo_url
                 #print(j)
                 r = requests.post(global_constants.CONTACTS_API, json=j, headers=headers)
@@ -484,7 +485,7 @@ class ContactEditorWindow(QMainWindow):
             else:
                 if (self.photo_path):
                     try:
-                        self.photo_url = redakt4.get_photo_uri(self.photo_path)
+                        self.photo_url = get_photo_uri(self.photo_path)
                         j["photo"] = self.photo_url
                     except Exception as e:
                         print(e)

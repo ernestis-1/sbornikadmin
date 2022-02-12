@@ -14,8 +14,8 @@ from quamash import QEventLoop
 import aiohttp, asyncio
 
 from preloader import Preloader
-from faculty_api import FacultiesApi, BaseFacultyInfo , GatherImages
-from sections_api import get_image_path_from_url
+from faculty_api import FacultiesApi, BaseFacultyInfo
+from images_api import get_image_path_from_url, GatherImages
 import faculty_edit
 import faculties_screen
 import global_constants
@@ -154,8 +154,7 @@ class ContactsWindow(QMainWindow):
         contact_widgets = []
         loop = asyncio.get_event_loop()
         gather = GatherImages(loop)
-        async with aiohttp.ClientSession() as session:
-            img_paths = await gather.get_images(session, urls)
+        img_paths = await gather.get_many_images(urls)
         for i in range(0, len(contacts)):
             cont_info = contacts[i]
             if img_paths[i]:

@@ -21,6 +21,7 @@ import asyncio
 
 from authorization_api import AuthorizationApi
 from login_screen import LoginWindow
+from images_api import get_photo_uri
 
 class Article(QPushButton):
     def __init__(self, article_info=None, sectionEditWindow=None):
@@ -465,7 +466,7 @@ class SectionEditWindow(QMainWindow):
                         "parentId": -1
                     }
                 if (self.image_file_name):
-                    j["picture"] = redakt4.get_photo_uri(self.image_file_name)
+                    j["picture"] = get_photo_uri(self.image_file_name)
                 #print(j)
                 r = requests.post(global_constants.ARTICLE_API, json=j, headers=headers)
                 if (r.status_code == 200):
@@ -495,7 +496,7 @@ class SectionEditWindow(QMainWindow):
             else:
                 if (self.image_file_name):
                     try:
-                        j["picture"] = redakt4.get_photo_uri(self.image_file_name)
+                        j["picture"] = get_photo_uri(self.image_file_name)
                     except Exception as e:
                         print(e)
                 else:

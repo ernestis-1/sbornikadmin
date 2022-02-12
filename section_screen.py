@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 from quamash import QEventLoop
 from sections_api import SectionInfo, SectionsApi
-from faculty_api import GatherImages
+from images_api import GatherImages
 from global_constants import SECTIONS_API
 from preloader import Preloader
 #from section_edit import SectionEditWindow
@@ -118,8 +118,7 @@ class SectionsWindow(QMainWindow, QWidget):
         sections = []
         loop = asyncio.get_event_loop()
         gather = GatherImages(loop)
-        async with aiohttp.ClientSession() as session:
-            images = await gather.get_images(session, urls)
+        images = await gather.get_many_images(urls)
         for i in range(0, len(self.sections)):
             image_path = images[i]
             section_info = self.sections[i]

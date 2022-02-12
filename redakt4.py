@@ -29,6 +29,7 @@ from sections_api import FullArticleInfo, ArticleApi
 from preloader import Preloader
 from authorization_api import AuthorizationApi
 from login_screen import LoginWindow
+from images_api import get_photo_uri
 
 
 class EditorWindow(QMainWindow, QWidget):# класс MainWindow
@@ -516,8 +517,7 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
         self.photo_urls_list = full_info.pictures_urls
 
         photoes = []
-        async with aiohttp.ClientSession() as session:
-            photoes = await full_info.get_images(session)
+        photoes = await full_info.get_images()
 
         self.preloader.stop_loader_animation()
         self.init_ui()
@@ -652,22 +652,6 @@ class EditorWindow(QMainWindow, QWidget):# класс MainWindow
                 print(r.status_code)
         except Exception as e:
             self.status.showMessage("Ошибка при отправке запроса!") 
-
-
-def get_photo_uri(path_img):
-    url = 'https://api.imgbb.com/1/upload?key=7739426e6cc4b2afe15d5db0e8272009'
-    with open(path_img, 'rb') as img:
-        name_img = os.path.basename(path_img)
-        files = {'image': (name_img,img, 'multipart/form-data', {'Expires': '0'}) }
-        with requests.Session() as s:
-            r = s.post(url,files=files)
-            #print(r.status_code)
-            #print(r.text)
-            json_response = r.json()
-            #print(json_response)
-            url_data = json_response['data']
-            #print(f'Нужный url: {url_data["url"]}')
-            return url_data["url"]
 
 
 #результат

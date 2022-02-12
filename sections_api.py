@@ -1,31 +1,8 @@
-import requests
-import tempfile
-import os
-import time
+from email.mime import image
 import aiohttp
+import images_api
 import asyncio
 
-def write_image(data):
-    _path = os.path.join(os.path.curdir, "tempfiles")
-    if os.path.exists(_path):
-        tmp_file = tempfile.NamedTemporaryFile(dir=_path)
-        #print(tmp_file)
-        tmp_name = tmp_file.name+".jpg"
-        tmp_file.close()
-        with open(tmp_name, "wb") as file:
-            file.write(data)
-        return tmp_name
-    else:
-        return None
-
-async def get_image_path_from_url(session, url):
-    try:
-        async with session.get(url) as response:
-            data = await response.read()
-            tmp_name = write_image(data)
-            return tmp_name
-    except Exception:
-        return None
 
 class SectionInfo:
     def __init__(self, sect_id, name, img_url):
@@ -33,8 +10,8 @@ class SectionInfo:
         self.name = name
         self.img_url = img_url
 
-    async def get_image_path(self, session):
-        return await get_image_path_from_url(session, self.img_url)
+    async def get_image_path(self):
+        return await images_api.get_image_path_from_url(self.img_url)
 
 
 class ArticleInfo:
@@ -88,12 +65,16 @@ class FullArticleInfo:
         self.parent_id = parent_id
         self.pictures_urls = pictures_urls
 
-    async def get_images(self, session):
+    async def get_images(self):
         filenames = []
-        for url in self.pictures_urls:
-            filename = await get_image_path_from_url(session, url)
-            if filename:
-                filenames.append(filename)
+        loop = asyncio.get_event_loop()
+        gather = images_api.GatherImages(loop)
+        filenames = await gather.get_many_images(self.pictures_urls)
+        filenames = [fname for fname in filenames if fname]
+        # for url in self.pictures_urls:
+        #     filename = await get_image_path_from_url(session, url)
+        #     if filename:
+        #         filenames.append(filename)
         return filenames
 
 
