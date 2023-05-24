@@ -202,9 +202,10 @@ class FacultyEditWindow(QMainWindow):
         #combobox_label.setFont(mid_font)
         combobox_label.setFont(head_font)
         self.type_combobox = QComboBox()
+        # TODO: STUPID FIX OF A SERVER SORTING PROBLEM. CHANGE LATER
         self.type_combobox_items = ["Структурное подразделение", "Факультет","Академия", "Институт"]
-        if (self.faculty_types):
-            self.type_combobox_items = self.faculty_types
+        # if (self.faculty_types):
+        #     self.type_combobox_items = self.faculty_types
         self.type_combobox.addItems(self.type_combobox_items) 
         self.type_combobox.setFont(mid_font)
         self.type_combobox.setCurrentIndex(self.fac_type)
