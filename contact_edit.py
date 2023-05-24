@@ -27,7 +27,7 @@ from images_api import get_photo_uri
 class ContactEditorWindow(QMainWindow):
     def __init__(self, faculty_info=None,
                     contact_id=None, contact_type="Студсовет", contact_types = ["Деканат", "Студсовет", "Другое"], 
-                    contact_name=None, contact_position=None, contact_number=None, 
+                    contact_name=None, contact_position=None, contact_number=None, contact_priority=None,
                     photo_path = None, photo_url=None, contact_links=[], authorization_api=AuthorizationApi()):
         QMainWindow.__init__(self)
         self.authorization_api = authorization_api
@@ -46,6 +46,8 @@ class ContactEditorWindow(QMainWindow):
         self.photo_url = photo_url
         #print(photo_url)
         self.contact_number = contact_number
+        self.contact_priority = contact_priority
+        print(self.contact_priority)
         self.contact_links = contact_links
         self.links_edits = []
         self.init_ui()
@@ -217,6 +219,25 @@ class ContactEditorWindow(QMainWindow):
         #self.button_open.setGeometry(QtCore.QRect(70, 10, 211, 31))
         self.button_open.setObjectName("button_open")
 
+        # priority section
+        self.priority_button_layout = QHBoxLayout()
+
+        self.label_priority = QtWidgets.QLabel()
+        self.label_priority.setObjectName("label_priority")
+        self.label_priority.setFont(font_labels)
+        self.label_priority.setMaximumWidth(100)
+
+        self.lineEdit_priority = QtWidgets.QLineEdit()
+        self.lineEdit_priority.setObjectName("lineEdit_priority")
+        self.lineEdit_priority.setFont(self.font_lines)
+        self.lineEdit_priority.setMaximumWidth(30)
+        if self.contact_priority:
+            self.lineEdit_priority.setText(str(self.contact_priority))
+        self.lineEdit_priority.setCursorPosition(0)
+
+        self.priority_button_layout.addWidget(self.label_priority)
+        self.priority_button_layout.addWidget(self.lineEdit_priority)
+
         self.button_edit = QPushButton()
         self.button_edit.setText("Создать контакт")
         if self.contact_id:
@@ -231,6 +252,7 @@ class ContactEditorWindow(QMainWindow):
 
         self.attachment_layout.addWidget(self.label_image)
         self.attachment_layout.addWidget(self.button_open)
+        self.attachment_layout.addLayout(self.priority_button_layout)
         #self.attachment_layout.addWidget(self.button_edit)
         self.attachment_layout.setAlignment(Qt.AlignTop)
 
@@ -436,6 +458,15 @@ class ContactEditorWindow(QMainWindow):
                 self.status.showMessage("Необходимо иметь права админа для отправки")
                 return
         headers = {"Authorization": "Bearer "+token}
+        priority = -1
+        try:
+            priority = int(self.lineEdit_priority.text())
+            if priority < 0:
+                self.status.showMessage("Приоритет должен быть целым неотрицательным числом")
+                return    
+        except ValueError:
+            self.status.showMessage("Приоритет должен быть целым неотрицательным числом")
+            return
         if self.contact_id is None:
             self.button_edit.setText("Отправить изменения")
             try:
@@ -444,6 +475,7 @@ class ContactEditorWindow(QMainWindow):
                 j = {
                         "facultyId": self.fac_id,
                         "type": self.group_combobox.currentIndex(),
+                        "priorityNumber": priority,
                         "name": self.lineEdit_name.text(),
                         "position": self.lineEdit_position.text(),
                         "phoneNumber": self.lineEdit_phone_number.text(),
@@ -474,6 +506,7 @@ class ContactEditorWindow(QMainWindow):
                     "id": self.contact_id,
                     "facultyId": self.fac_id,
                     "type": self.group_combobox.currentText(),
+                    "priorityNumber": priority,
                     "name": self.lineEdit_name.text(),
                     "position": self.lineEdit_position.text(),
                     "phoneNumber": self.lineEdit_phone_number.text(),
@@ -547,6 +580,7 @@ class ContactEditorWindow(QMainWindow):
         self.label_group.setText(_translate("MainWindow", "Группа контакта:"))
         self.label_phone_number.setText(_translate("MainWindow", "Телефон контакта:"))
         self.label_position.setText(_translate("MainWindow", "Должность контакта:"))
+        self.label_priority.setText(_translate("MainWindow", "Приоритет:"))
         #self.attach_button.setText(_translate("MainWindow", "<Прикрепите фото контакта>"))
         #self.pushButton.clicked.connect(self._on_open_image)
         self.button_add.setText(_translate("MainWindow", "+"))

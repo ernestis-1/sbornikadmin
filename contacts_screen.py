@@ -25,7 +25,7 @@ from authorization_api import AuthorizationApi
 
 class Contact(QPushButton):
     def __init__(self, contact_id=None, contact_type=None, contact_name=None, contact_position=None, photo_url=None, 
-                    photo_path="images/attach.png", contact_number=None,
+                    photo_path="images/attach.png", contact_number=None, contact_priority=None,
             contact_links=None, contacts_window=None):
         QWidget.__init__(self)
         self.contact_id = contact_id
@@ -33,6 +33,7 @@ class Contact(QPushButton):
         self.contact_name = contact_name
         self.contact_position = contact_position
         self.contact_number = contact_number
+        self.contact_priority = contact_priority
         self.contact_links = contact_links
         self.photo_url = photo_url
         self.photo_path = photo_path
@@ -85,7 +86,7 @@ class Contact(QPushButton):
             self.setEnabled(False)
             self.contacts_window.forbidDeletion(self.photo_path)
             self.contacts_window.open_contact_edit(self.contact_id, self.contact_type, self.contact_name, 
-                self.contact_position, self.contact_number,
+                self.contact_position, self.contact_number, self.contact_priority,
                 self.photo_path, self.photo_url, self.contact_links)
 
 
@@ -160,11 +161,12 @@ class ContactsWindow(QMainWindow):
             if img_paths[i]:
                 contact_widget = Contact(cont_info.cont_id, cont_info.cont_type, cont_info.name, cont_info.position, 
                     cont_info.img_url, img_paths[i],
-                    cont_info.phone_number, cont_info.links, contacts_window=self)
+                    cont_info.phone_number, cont_info.priority_number, cont_info.links, contacts_window=self)
             else:
                 contact_widget = Contact(cont_info.cont_id, cont_info.cont_type, cont_info.name, cont_info.position, 
                     cont_info.img_url, 
-                    contact_number=cont_info.phone_number, contact_links=cont_info.links, contacts_window=self)
+                    contact_number=cont_info.phone_number, contact_priority=cont_info.priority_number,
+                    contact_links=cont_info.links, contacts_window=self)
             contact_widgets.append(contact_widget)
 
         self.preloader.stop_loader_animation()
@@ -339,10 +341,10 @@ class ContactsWindow(QMainWindow):
 
 
     def open_contact_edit(self, contact_id, contact_type, contact_name, contact_position, 
-                contact_number, photo_path, photo_url, contact_links):
+                contact_number, contact_priority, photo_path, photo_url, contact_links):
         #print(photo_path)
         self.contact_window = contact_edit.ContactEditorWindow(self.faculty_info,
-                contact_id, contact_type, self.contact_types, contact_name, contact_position, contact_number, 
+                contact_id, contact_type, self.contact_types, contact_name, contact_position, contact_number, contact_priority, 
                 photo_path, photo_url, contact_links,
                 authorization_api=self.authorization_api)
         self.contact_window.move(self.pos())

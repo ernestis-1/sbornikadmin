@@ -42,7 +42,7 @@ class BaseFacultyInfo:
 
 
 class ContactInfo:
-    def __init__(self, cont_id, cont_type, name, position, phone_number, links, photo_url):
+    def __init__(self, cont_id, cont_type, name, position, phone_number, links, photo_url, priority_number = -1):
         self.cont_id = cont_id
         self.cont_type = cont_type
         self.name = name
@@ -50,6 +50,7 @@ class ContactInfo:
         self.phone_number = phone_number
         self.links = links
         self.img_url = photo_url
+        self.priority_number = priority_number
 
 
 class FullFacultyInfo:
@@ -106,11 +107,11 @@ class FacultiesApi:
         _info = j["info"]
         _picture = j["picture"]
         _contacts = j["contacts"]
-        print(_contacts)
+        #print(_contacts)
         contacts = []
         for _contact in _contacts:
             contact = ContactInfo(_contact["id"], _contact["type"], _contact["name"], _contact["position"],
-                    _contact["phoneNumber"], _contact["links"], _contact["photo"])
+                    _contact["phoneNumber"], _contact["links"], _contact["photo"], priority_number=_contact["priorityNumber"])
             #print(contact.cont_type)
             contacts.append(contact)
         return contacts
